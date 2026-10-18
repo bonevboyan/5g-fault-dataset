@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+# built NF binaries (free5gc-otel/build.sh), ~360 MB
+free5gc-otel/bin/
+# per-run state and generated PKI (testbed/k8s/pki.sh)
+testbed/.state/
+testbed/k8s/pki/

@@ -1,0 +1,403 @@
+# [f5g] End-to-end trace parent across free5GC's call graph. Shared parts live in
+# free5gc-otel/f5gtrace, util-patched/logger (gin middleware) and openapi-patched (client transport).
+# Per-NF parts (this file): root spans in the AMF NGAP and SMF PFCP (DLDR) dispatchers, NAS/SUPI
+# annotation, and f5gtrace.Go on the goroutine hand-offs that lead to SBI calls.
+# Note: amf callback.go also carries the duplicate-PSI hunks (amf-duplicate-psi-reprocess.patch).
+
+### NFs/amf
+diff --git a/internal/nas/dispatch.go b/internal/nas/dispatch.go
+index 7f50042..7764813 100644
+--- a/internal/nas/dispatch.go
++++ b/internal/nas/dispatch.go
+@@ -3,6 +3,9 @@ package nas
+ import (
+ 	"errors"
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
++	"go.opentelemetry.io/otel/attribute"
++	"reflect"
+ 
+ 	"github.com/free5gc/amf/internal/context"
+ 	"github.com/free5gc/amf/internal/gmm"
+@@ -20,6 +23,10 @@ func Dispatch(ue *context.AmfUe, accessType models.AccessType, procedureCode int
+ 		return errors.New("GSM Message should include in GMM Message")
+ 	}
+ 
++	// [f5g patch] name the trace by the NAS message and the UE it belongs to.
++	f5gtrace.Annotate(attribute.String("nas.msg", reflect.TypeOf(msg).Elem().Name()),
++		attribute.String("supi", ue.Supi), attribute.String("ue.guti", ue.Guti))
++
+ 	if ue.State[accessType] == nil {
+ 		return fmt.Errorf("UE State is empty (accessType=%q). Can't send GSM Message", accessType)
+ 	}
+diff --git a/internal/ngap/dispatcher.go b/internal/ngap/dispatcher.go
+index 90e179a..11e2b32 100644
+--- a/internal/ngap/dispatcher.go
++++ b/internal/ngap/dispatcher.go
+@@ -2,6 +2,8 @@ package ngap
+ 
+ import (
+ 	"errors"
++	"github.com/free5gc/f5gtrace"
++	"go.opentelemetry.io/otel/attribute"
+ 	"net"
+ 	"reflect"
+ 
+@@ -39,6 +41,20 @@ func Dispatch(conn net.Conn, msg []byte) {
+ 		logger.NgapLog.Error("NGAP Message is nil")
+ 		return
+ 	}
++	// [f5g patch] one root span per NGAP message: every SBI call the AMF makes while handling it
++	// (and, via f5gtrace, the calls those NFs make in turn) becomes part of this trace.
++	span := f5gtrace.Start("ngap "+reflect.TypeOf(decoded).Elem().Name(),
++		attribute.String("ran.addr", conn.RemoteAddr().String()))
++	defer span(nil)
++	if amfID, ranID := messageUEIDs(decoded); amfID != nil || ranID != nil {
++		if amfID != nil {
++			f5gtrace.Annotate(attribute.Int64("ngap.amf_ue_ngap_id", amfID.Value))
++		}
++		if ranID != nil {
++			f5gtrace.Annotate(attribute.Int64("ngap.ran_ue_ngap_id", ranID.Value))
++		}
++	}
++
+ 	ran, ok := amfSelf.AmfRanFindByConn(conn)
+ 	if !ok {
+ 		_, isNGSetup := decoded.(*ngapMessage.NGSetupRequest)
+diff --git a/internal/sbi/processor/callback.go b/internal/sbi/processor/callback.go
+index cbf6118..3c5f4d5 100644
+--- a/internal/sbi/processor/callback.go
++++ b/internal/sbi/processor/callback.go
+@@ -2,6 +2,7 @@ package processor
+ 
+ import (
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"net/http"
+ 	"runtime/debug"
+ 	"strconv"
+@@ -9,11 +10,13 @@ import (
+ 	"github.com/gin-gonic/gin"
+ 
+ 	"github.com/free5gc/amf/internal/context"
++	"github.com/free5gc/amf/internal/gmm"
+ 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
+ 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
+ 	"github.com/free5gc/amf/internal/logger"
+ 	amf_nas "github.com/free5gc/amf/internal/nas"
+ 	ngap_message "github.com/free5gc/amf/internal/ngap/message"
++	nas_message "github.com/free5gc/nas/message"
+ 	ngapType "github.com/free5gc/ngap/message"
+ 	"github.com/free5gc/openapi/models"
+ 	"github.com/free5gc/util/metrics/sbi"
+@@ -83,14 +86,25 @@ func (p *Processor) SmContextStatusNotifyProcedure(supi string, pduSessionID int
+ 	}
+ 
+ 	if smContextStatusNotification.StatusInfo.ResourceStatus == models.Smf_PDUSess_ResourceStatus_RELEASED {
++		var pending *nas_message.ULNASTransport
+ 		if smContext.PduSessionIDDuplicated() {
+ 			ue.ProducerLog.Infof("Local release duplicated SmContext[%d]", pduSessionID)
+ 			smContext.SetDuplicatedPduSessionID(false)
++			pending = smContext.TakeULNASTransport()
+ 		} else {
+ 			ue.ProducerLog.Infof("Release SmContext[%d] (Cause: %s)", pduSessionID,
+ 				smContextStatusNotification.StatusInfo.Cause)
+ 		}
+ 		ue.DeleteSmContext(pduSessionID, smContext.AccessType())
++		// [f5g patch] the old session is gone: establish the new one that arrived with the same
++		// PSI (stored by the UL NAS Transport handler; upstream never re-processed it)
++		if pending != nil {
++			ue.ProducerLog.Infof("Re-process PDU session establishment for duplicated PSI[%d]", pduSessionID)
++			if _, err := gmm.CreatePDUSession(pending, ue, smContext.AccessType(), pduSessionID,
++				pending.PayloadCntr.Contents); err != nil {
++				ue.ProducerLog.Errorf("Re-processing PDU session establishment PSI[%d] failed: %v", pduSessionID, err)
++			}
++		}
+ 	} else {
+ 		problemDetails := &models.ProblemDetails{
+ 			Status: http.StatusBadRequest,
+@@ -160,7 +174,7 @@ func (p *Processor) AmPolicyControlUpdateNotifyUpdateProcedure(polAssoID string,
+ 
+ 	if ue != nil {
+ 		// use go routine to write response first to ensure the order of the procedure
+-		go func() {
++		f5gtrace.Go(func() {
+ 			defer func() {
+ 				if p := recover(); p != nil {
+ 					// Print stack for panic to log. Fatalf() will let program exit.
+@@ -199,7 +213,7 @@ func (p *Processor) AmPolicyControlUpdateNotifyUpdateProcedure(polAssoID string,
+ 				}
+ 				ngap_message.SendPaging(ue, pkg)
+ 			}
+-		}()
++		})
+ 	}
+ 	return nil
+ }
+@@ -242,7 +256,7 @@ func (p *Processor) AmPolicyControlUpdateNotifyTerminateProcedure(polAssoID stri
+ 	logger.CallbackLog.Infof("Cause of AM Policy termination[%+v]", terminationNotification.Cause)
+ 
+ 	// use go routine to write response first to ensure the order of the procedure
+-	go func() {
++	f5gtrace.Go(func() {
+ 		defer func() {
+ 			if p := recover(); p != nil {
+ 				// Print stack for panic to log. Fatalf() will let program exit.
+@@ -256,7 +270,7 @@ func (p *Processor) AmPolicyControlUpdateNotifyTerminateProcedure(polAssoID stri
+ 		} else if err != nil {
+ 			logger.ProducerLog.Errorf("AM Policy Control Delete Error[%v]", err.Error())
+ 		}
+-	}()
++	})
+ 	return nil
+ }
+ 
+@@ -336,7 +350,7 @@ func (p *Processor) N1MessageNotifyProcedure(n1MessageNotify models.N1MessageNot
+ 		return problemDetails
+ 	}
+ 
+-	go func() {
++	f5gtrace.Go(func() {
+ 		defer func() {
+ 			if p := recover(); p != nil {
+ 				logger.CallbackLog.Errorf("panic: %v\n%s", p, string(debug.Stack()))
+@@ -384,6 +398,6 @@ func (p *Processor) N1MessageNotifyProcedure(n1MessageNotify models.N1MessageNot
+ 			n1MessageNotify.BinaryDataN1Message.Content,
+ 			true,
+ 		)
+-	}()
++	})
+ 	return nil
+ }
+
+### NFs/smf
+diff --git a/internal/pfcp/dispatcher.go b/internal/pfcp/dispatcher.go
+index 7f7efbf..f303c9d 100644
+--- a/internal/pfcp/dispatcher.go
++++ b/internal/pfcp/dispatcher.go
+@@ -1,6 +1,8 @@
+ package pfcp
+ 
+ import (
++	"github.com/free5gc/f5gtrace"
++	"go.opentelemetry.io/otel/attribute"
+ 	"net"
+ 	"runtime/debug"
+ 	"sync"
+@@ -155,6 +157,17 @@ func (s *PfcpServer) dispatchReceived(received RcvPfcpMsg) {
+ 		}
+ 	}()
+ 
++	// [f5g patch] a root span for a Session Report that carries downlink data: it triggers
++	// paging via N1N2MessageTransfer to the AMF, so the SBI calls become its children. Usage
++	// reports and other PFCP messages make no SBI calls and would only add single-span traces.
++	if rep, ok := received.Msg.(*message.SessionReportRequest); ok && rep.ReportType != nil && rep.ReportType.HasDLDR() {
++		span := f5gtrace.Start("pfcp "+received.Msg.MessageTypeName(),
++			attribute.String("upf.addr", received.RemoteAddr.String()),
++			attribute.Int64("pfcp.seid", int64(received.Msg.SEID())),
++			attribute.String("pfcp.report", "DLDR"))
++		defer span(nil)
++	}
++
+ 	// Synchronous execution is intentional: spawning here would turn blocked
+ 	// handlers into an unbounded goroutine backlog.
+ 	dispatch(received.Msg, &received.RemoteAddr)
+diff --git a/internal/sbi/processor/pdu_session.go b/internal/sbi/processor/pdu_session.go
+index f61559b..f9eaa9f 100644
+--- a/internal/sbi/processor/pdu_session.go
++++ b/internal/sbi/processor/pdu_session.go
+@@ -4,6 +4,7 @@ import (
+ 	"encoding/hex"
+ 	"errors"
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"net"
+ 	"net/http"
+ 	"reflect"
+@@ -307,7 +308,7 @@ func (p *Processor) HandlePDUSessionSMContextCreate(
+ 	// generate goroutine to handle PFCP and
+ 	// reply PDUSessionSMContextCreate rsp immediately
+ 	needUnlock = false
+-	go func() {
++	f5gtrace.Go(func() {
+ 		defer smContext.SMLock.Unlock()
+ 
+ 		smContext.SendUpPathChgNotification("EARLY", SendUpPathChgEventExposureNotification)
+@@ -321,7 +322,7 @@ func (p *Processor) HandlePDUSessionSMContextCreate(
+ 		smContext.SendUpPathChgNotification("LATE", SendUpPathChgEventExposureNotification)
+ 
+ 		smContext.PostRemoveDataPath()
+-	}()
++	})
+ 
+ 	doSubscribe = true
+ 	response.JsonData = smContext.BuildCreatedData()
+diff --git a/internal/sbi/processor/sm_common.go b/internal/sbi/processor/sm_common.go
+index e0bd68e..ab24575 100644
+--- a/internal/sbi/processor/sm_common.go
++++ b/internal/sbi/processor/sm_common.go
+@@ -1,6 +1,7 @@
+ package processor
+ 
+ import (
++	"github.com/free5gc/f5gtrace"
+ 	smf_context "github.com/free5gc/smf/internal/context"
+ )
+ 
+@@ -33,7 +34,7 @@ func (p *Processor) RemoveSMContextFromAllNF(smContext *smf_context.SMContext, s
+ 	// Because the amfUE who called this SMF API is being locked until the API Handler returns,
+ 	// sending SMContext Status Notification should run asynchronously
+ 	// so that this function returns immediately.
+-	go p.sendSMContextStatusNotificationAndRemoveSMContext(smContext, sendNotification)
++	f5gtrace.Go(func() { p.sendSMContextStatusNotificationAndRemoveSMContext(smContext, sendNotification) })
+ }
+ 
+ func (p *Processor) sendSMContextStatusNotificationAndRemoveSMContext(
+
+### NFs/udm
+diff --git a/internal/sbi/processor/ue_context_management.go b/internal/sbi/processor/ue_context_management.go
+index c4a135b..136f381 100644
+--- a/internal/sbi/processor/ue_context_management.go
++++ b/internal/sbi/processor/ue_context_management.go
+@@ -1,6 +1,7 @@
+ package processor
+ 
+ import (
++	"github.com/free5gc/f5gtrace"
+ 	"net/http"
+ 	"strconv"
+ 
+@@ -162,7 +163,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
+ 				AccessType:  models.AccessType_3_GPP_ACCESS,
+ 			}
+ 
+-			go func() {
++			f5gtrace.Go(func() {
+ 				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
+ 				pd := p.SendOnDeregistrationNotification(ueID,
+ 					oldAmf3GppAccessRegContext.DeregCallbackUri,
+@@ -170,7 +171,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
+ 				if pd != nil {
+ 					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
+ 				}
+-			}()
++			})
+ 		}
+ 
+ 		c.JSON(http.StatusOK, registerRequest)
+@@ -234,14 +235,14 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
+ 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
+ 		}
+ 
+-		go func() {
++		f5gtrace.Go(func() {
+ 			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmfNon3GppAccessRegContext.Guami)
+ 			pd := p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
+ 				deregistData) // Deregistration Notify Triggered
+ 			if pd != nil {
+ 				logger.UecmLog.Errorf("RegisterAmfNon3gppAccess: send DeregNotify fail %v", pd)
+ 			}
+-		}()
++		})
+ 
+ 		c.JSON(http.StatusOK, registerRequest)
+ 	} else {
+
+### NFs/udr
+diff --git a/internal/sbi/processor/callback.go b/internal/sbi/processor/callback.go
+index 873792d..d447b55 100644
+--- a/internal/sbi/processor/callback.go
++++ b/internal/sbi/processor/callback.go
+@@ -3,6 +3,7 @@ package processor
+ import (
+ 	"context"
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"runtime/debug"
+ 
+ 	"github.com/free5gc/openapi/models"
+@@ -57,7 +58,7 @@ func PreHandleOnDataChangeNotify(ueId string, resourceId string, patchItems []mo
+ 
+ 	notifyItems = append(notifyItems, notifyItem)
+ 
+-	go SendOnDataChangeNotify(ueId, notifyItems)
++	f5gtrace.Go(func() { SendOnDataChangeNotify(ueId, notifyItems) })
+ }
+ 
+ func PreHandlePolicyDataChangeNotification(ueId string, dataId string, value interface{}) {
+@@ -87,14 +88,14 @@ func PreHandlePolicyDataChangeNotification(ueId string, dataId string, value int
+ 		return
+ 	}
+ 
+-	go SendPolicyDataChangeNotification(policyDataChangeNotification)
++	f5gtrace.Go(func() { SendPolicyDataChangeNotification(policyDataChangeNotification) })
+ }
+ 
+ func PreHandleInfluenceDataUpdateNotification(influenceId string, original, modified *models.Udr_DR_TrafficInfluData) {
+ 	resUri := fmt.Sprintf("%s/application-data/influenceData/%s",
+ 		udr_context.GetSelf().GetIPv4GroupUri(udr_context.NUDR_DR), influenceId)
+ 
+-	go SendInfluenceDataUpdateNotification(resUri, original, modified)
++	f5gtrace.Go(func() { SendInfluenceDataUpdateNotification(resUri, original, modified) })
+ }
+ 
+ func SendOnDataChangeNotify(ueId string, notifyItems []models.NotifyItem) {
+
+### NFs/pcf
+diff --git a/internal/sbi/processor/policyauthorization.go b/internal/sbi/processor/policyauthorization.go
+index 0f8ad41..c022ac1 100644
+--- a/internal/sbi/processor/policyauthorization.go
++++ b/internal/sbi/processor/policyauthorization.go
+@@ -2,6 +2,7 @@ package processor
+ 
+ import (
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"net/http"
+ 	"strings"
+ 	"time"
+@@ -441,7 +442,7 @@ func (p *Processor) postAppSessCtxProcedure(appSessCtx *models.Pcf_PolAuth_AppSe
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 	}
+ 	return appSessCtx, locationHeader, nil
+ }
+@@ -512,7 +513,7 @@ func (p *Processor) HandleDeleteAppSessionContext(
+ 		ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 		SmPolicyDecision: &deletedSmPolicyDec,
+ 	}
+-	go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++	f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 	logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	c.Status(http.StatusNoContent)
+ }
+@@ -846,7 +847,7 @@ func (p *Processor) HandleModAppSessionContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	c.JSON(http.StatusOK, appSessCtx)
+@@ -893,7 +894,7 @@ func (p *Processor) HandleDeleteEventsSubscContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	c.Status(http.StatusNoContent)
+@@ -1047,7 +1048,7 @@ func (p *Processor) HandleUpdateEventsSubscContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	if created {

@@ -1,0 +1,297 @@
+{
+  "run_id": "fix-psi-tac",
+  "phase": "failed",
+  "started_at": "2026-09-28T10:18:01.615+00:00",
+  "backend": "k8s",
+  "ran": {
+    "gnbs": 3,
+    "ues_per_gnb": 50,
+    "ues": 150
+  },
+  "tracing": true,
+  "sbi_tls": true,
+  "store": "127.0.0.1",
+  "host": {
+    "kernel": "7.0.0-34-generic",
+    "cpus": 20,
+    "node": "boyan-bonev-Yoga-Slim-7-ProX-14IAH7"
+  },
+  "gates": [
+    {
+      "gate": "gtp5g loaded",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "gate": "storage tier reachable",
+      "ok": true,
+      "seconds": 0.02
+    },
+    {
+      "gate": "cluster roles Ready",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "otel-gateway Ready",
+      "ok": true,
+      "seconds": 2.08
+    },
+    {
+      "gate": "logs + metrics reach storage",
+      "ok": true,
+      "seconds": 6.03
+    },
+    {
+      "gate": "mongo Ready",
+      "ok": true,
+      "seconds": 2.1
+    },
+    {
+      "gate": "nrf SBI up (https)",
+      "ok": true,
+      "seconds": 1.11
+    },
+    {
+      "gate": "upf started",
+      "ok": true,
+      "seconds": 5.33
+    },
+    {
+      "gate": "all NF types registered in NRF",
+      "ok": true,
+      "seconds": 2.24
+    },
+    {
+      "gate": "smf<->upf PFCP association",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "amf Ready",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "ausf Ready",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "udm Ready",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "udr Ready",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "pcf Ready",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "nssf Ready",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "smf Ready",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "chf Ready",
+      "ok": true,
+      "seconds": 1.09
+    },
+    {
+      "gate": "webui Ready",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "traces reach storage",
+      "ok": true,
+      "seconds": 9.02
+    },
+    {
+      "gate": "150 subscribers provisioned",
+      "ok": true
+    },
+    {
+      "gate": "gnb-0 NG Setup",
+      "ok": true,
+      "seconds": 1.1
+    },
+    {
+      "gate": "gnb-1 NG Setup",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "gnb-2 NG Setup",
+      "ok": true,
+      "seconds": 1.1
+    },
+    {
+      "gate": "150 UEs registered + PDU sessions with TUN",
+      "ok": false,
+      "seconds": 270,
+      "last_error": "150/150 UEs registered, 0/300 PDU sessions, 0/300 with a TUN data path"
+    }
+  ],
+  "images_reimported": [
+    [
+      "agent-0",
+      "free5gc/amf:otel2"
+    ]
+  ],
+  "node_cpusets": {
+    "server-0": "12-15",
+    "agent-0": "0-5",
+    "agent-1": "6-11"
+  },
+  "config_sha256": "a8ff94e93d7f55ebe92ae4c0a14c5f79cbd315f1429d5181af58c8a962327366",
+  "error": "150 UEs registered + PDU sessions with TUN not satisfied within 270s (last: 150/150 UEs registered, 0/300 PDU sessions, 0/300 with a TUN data path)",
+  "ready_at": "2026-09-28T10:23:28.026+00:00",
+  "pods": {
+    "amf-5c56865846-t87jc": {
+      "app": "amf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.137",
+      "uid": "de54794e-a7bf-4e8c-8a67-cd08ef6820d5",
+      "image": "docker.io/free5gc/amf:otel2",
+      "image_id": "sha256:ac78602ef3bc0bf584cb875298ef0fd75c35c30b4dc118d0d280f9cbe4e1d71b",
+      "restarts": 0
+    },
+    "ausf-86c7c99df6-hwtjs": {
+      "app": "ausf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.138",
+      "uid": "70f1c3a5-1d34-4456-b321-98b705b8ca33",
+      "image": "docker.io/free5gc/ausf:otel2",
+      "image_id": "sha256:88a741f5d93a588793635a9530577ae37bf346b2acee4127c4a0b473db9f47fa",
+      "restarts": 0
+    },
+    "chf-7954dccb6b-8tqmh": {
+      "app": "chf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.144",
+      "uid": "c4095bb1-835c-4bbd-8ddc-2a944dd032cb",
+      "image": "docker.io/free5gc/chf:otel2",
+      "image_id": "sha256:124f33d22e73ac1bae64effa295befd8dc7c67f2928a87ff682bd4f136587492",
+      "restarts": 0
+    },
+    "db-54b97558ff-wdwkt": {
+      "app": "db",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.134",
+      "uid": "fa70666d-0db2-4bd7-8aa0-7c5594f8872c",
+      "image": "docker.io/library/mongo:4.4",
+      "image_id": "sha256:0010f63d26952bd3960fac5513c64a1cf7d6299f31fa7b54ac1b36633ee04333",
+      "restarts": 0
+    },
+    "gnb-0-5bd6747fdf-87m55": {
+      "app": "gnb-0",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.45",
+      "uid": "546aa137-2556-4cdc-bd7f-6890482cbce3",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-1-699745dd96-zpz78": {
+      "app": "gnb-1",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.46",
+      "uid": "d3614bbf-0aff-4a32-8bdf-e86b34ca749f",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-2-6bf4c754d7-6l464": {
+      "app": "gnb-2",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.47",
+      "uid": "cacc00d4-e7b1-49ce-9c78-8f5822a449ec",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "nrf-749c78886-lf26n": {
+      "app": "nrf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.135",
+      "uid": "a652eed8-a86d-4b88-ab89-80587e5302f3",
+      "image": "docker.io/free5gc/nrf:otel2",
+      "image_id": "sha256:1cb1c38a3e873b8822608fb9f0d7a7732c8566a33c01a1b1bff76e6c0f5e1ebb",
+      "restarts": 0
+    },
+    "nssf-5ddfbdb7f8-grz2k": {
+      "app": "nssf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.142",
+      "uid": "80fee10a-218e-4a3d-a4f6-bb506310aa17",
+      "image": "docker.io/free5gc/nssf:otel2",
+      "image_id": "sha256:84fd5b9ced825bf12590517cfe88e8d7372e60e3c5baf3964474b522503c6a65",
+      "restarts": 0
+    },
+    "pcf-6cbb77c48b-md22l": {
+      "app": "pcf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.141",
+      "uid": "33b9d174-ada8-4525-a7d1-205ec62d109e",
+      "image": "docker.io/free5gc/pcf:otel2",
+      "image_id": "sha256:270e739e8e58b8fece54c39bcb572022dc34164d0a833ec0d607d1f9807d2b0b",
+      "restarts": 0
+    },
+    "smf-66888bb8f9-qrmw6": {
+      "app": "smf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.143",
+      "uid": "c5eb00f5-9cdc-4708-a4f8-65936aa5eeeb",
+      "image": "docker.io/free5gc/smf:otel2",
+      "image_id": "sha256:3d200edf5dcb9088175c9f36ae9becac8b90701f964fe66613075c5bb7a3097e",
+      "restarts": 0
+    },
+    "udm-799db68cd6-kfjvn": {
+      "app": "udm",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.139",
+      "uid": "65b4a2c0-0687-44f0-8ed0-16a61c883ed4",
+      "image": "docker.io/free5gc/udm:otel2",
+      "image_id": "sha256:77b40f61beabc1a288a982c2ab2115b6d7ff2e06784e1613dedb4f8583cf3832",
+      "restarts": 0
+    },
+    "udr-564d77f94-fzpq8": {
+      "app": "udr",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.140",
+      "uid": "a2c42300-0997-4f96-a49b-4fc20a8f7418",
+      "image": "docker.io/free5gc/udr:otel2",
+      "image_id": "sha256:1fdce81b62e915731bd659fb8837036fb58e8fb820fa73111950ac518750b159",
+      "restarts": 0
+    },
+    "upf-7469d55486-84l5z": {
+      "app": "upf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.136",
+      "uid": "44b34935-c573-4ef5-9218-d22ae2edafe3",
+      "image": "docker.io/library/busybox:1.37",
+      "image_id": "sha256:30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb",
+      "restarts": 0
+    },
+    "webui-7cc657c45d-hn2p6": {
+      "app": "webui",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.145",
+      "uid": "f0d96488-ae1d-4b2d-8f78-6d9a2cc43b39",
+      "image": "docker.io/free5gc/webui:otel2",
+      "image_id": "sha256:b4b26b2de90f49aa3634e294c4e551a0fc04ad1c8e6726dadf9ca18c02ce88cc",
+      "restarts": 0
+    }
+  }
+}

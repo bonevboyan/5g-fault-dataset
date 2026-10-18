@@ -1,0 +1,128 @@
+diff --git a/internal/context/amf_ue.go b/internal/context/amf_ue.go
+index 057d224..03a9b5a 100644
+--- a/internal/context/amf_ue.go
++++ b/internal/context/amf_ue.go
+@@ -916,6 +916,17 @@ func (ue *AmfUe) DeleteSmContext(pduSessionID int32, anType models.AccessType) {
+ 	ue.SmContextList.Delete(pduSessionID)
+ }
+ 
++// DeleteSmContextIfCurrent deletes the SmContext of pduSessionID only if it is still smContext.
++// [f5g patch] used on the duplicate-PSI path, where the SMF's status notify may already have
++// removed the old context and stored a new one under the same PSI.
++func (ue *AmfUe) DeleteSmContextIfCurrent(pduSessionID int32, smContext *SmContext) bool {
++	if !ue.SmContextList.CompareAndDelete(pduSessionID, smContext) {
++		return false
++	}
++	business_metrics.IncrPduSessionEventCounter(string(smContext.AccessType()), business_metrics.PDU_SESSION_RELEASE_EVENT)
++	return true
++}
++
+ func (ue *AmfUe) DeleteAllSmContexts() {
+ 	ue.SmContextList.Range(func(key, value interface{}) bool {
+ 		pduId, ok := key.(int32)
+diff --git a/internal/context/sm_context.go b/internal/context/sm_context.go
+index 6e457dc..c2b7f5d 100644
+--- a/internal/context/sm_context.go
++++ b/internal/context/sm_context.go
+@@ -204,6 +204,18 @@ func (c *SmContext) StoreULNASTransport(msg *message.ULNASTransport) {
+ 	c.ulNASTransport = msg
+ }
+ 
++// TakeULNASTransport returns the stored UL NAS Transport and clears it in one step.
++// [f5g patch] A duplicate-PSI initial request is stored while the old session is released.
++// Two paths can finish that release (the SMF's SmContextStatusNotify, or a failed Update when
++// the SMF had released it already); exactly one of them must re-process the stored request.
++func (c *SmContext) TakeULNASTransport() *message.ULNASTransport {
++	c.mu.Lock()
++	defer c.mu.Unlock()
++	m := c.ulNASTransport
++	c.ulNASTransport = nil
++	return m
++}
++
+ func (c *SmContext) DeleteULNASTransport() {
+ 	c.mu.Lock()
+ 	defer c.mu.Unlock()
+diff --git a/internal/gmm/handler.go b/internal/gmm/handler.go
+index 06d2a43..81a2435 100644
+--- a/internal/gmm/handler.go
++++ b/internal/gmm/handler.go
+@@ -143,14 +143,27 @@ func transport5GSMMessage(ue *context.AmfUe, anType models.AccessType,
+ 				ue.GmmLog.Warningf("Duplicated PDU session ID[%d]", pduSessionID)
+ 				smContext.SetDuplicatedPduSessionID(true)
+ 				response, _, _, err := consumer.GetConsumer().SendUpdateSmContextRequest(smContext, &updateData, nil, nil)
+-				if err != nil {
+-					ue.GmmLog.Errorf("Failed to update smContext, local release SmContext[%d]", pduSessionID)
+-					ue.DeleteSmContext(pduSessionID, smContext.AccessType())
++				if err != nil || response == nil {
++					if err != nil {
++						ue.GmmLog.Errorf("Failed to update smContext, local release SmContext[%d]", pduSessionID)
++					} else {
++						ue.GmmLog.Errorf("Response to update smContext is nil, local release SmContext[%d]", pduSessionID)
++					}
++					// [f5g patch] Upstream dropped the new request here: it was stored above but
++					// never read again, so the UE only recovered on its T3580 retransmission
++					// (~16 s). This path is typical when the request races the release of the
++					// same PSI (the SMF has already deleted the context). Release locally without
++					// touching a context that the notify path may already have replaced, then
++					// establish the new session now (TS 24.501 5.4.5.2.5), unless the notify
++					// path already took the request.
++					ue.DeleteSmContextIfCurrent(pduSessionID, smContext)
++					if stored := smContext.TakeULNASTransport(); stored != nil {
++						ue.GmmLog.Infof("Re-process PDU session establishment for duplicated PSI[%d]", pduSessionID)
++						_, cerr := CreatePDUSession(stored, ue, anType, pduSessionID, stored.PayloadCntr.Contents)
++						return cerr
++					}
+ 					return err
+-				} else if response == nil {
+-					ue.GmmLog.Errorf("Response to update smContext is nil, local release SmContext[%d]", pduSessionID)
+-					ue.DeleteSmContext(pduSessionID, smContext.AccessType())
+-				} else if response != nil {
++				} else {
+ 					smContext.SetUserLocation(ue.Location)
+ 					responseData := response.JsonData
+ 					n2Info := relatedContentBytes(response.BinaryDataN2SmInformation)
+diff --git a/internal/sbi/processor/callback.go b/internal/sbi/processor/callback.go
+index cbf6118..be8010e 100644
+--- a/internal/sbi/processor/callback.go
++++ b/internal/sbi/processor/callback.go
+@@ -9,11 +9,13 @@ import (
+ 	"github.com/gin-gonic/gin"
+ 
+ 	"github.com/free5gc/amf/internal/context"
++	"github.com/free5gc/amf/internal/gmm"
+ 	gmm_common "github.com/free5gc/amf/internal/gmm/common"
+ 	gmm_message "github.com/free5gc/amf/internal/gmm/message"
+ 	"github.com/free5gc/amf/internal/logger"
+ 	amf_nas "github.com/free5gc/amf/internal/nas"
+ 	ngap_message "github.com/free5gc/amf/internal/ngap/message"
++	nas_message "github.com/free5gc/nas/message"
+ 	ngapType "github.com/free5gc/ngap/message"
+ 	"github.com/free5gc/openapi/models"
+ 	"github.com/free5gc/util/metrics/sbi"
+@@ -83,14 +85,25 @@ func (p *Processor) SmContextStatusNotifyProcedure(supi string, pduSessionID int
+ 	}
+ 
+ 	if smContextStatusNotification.StatusInfo.ResourceStatus == models.Smf_PDUSess_ResourceStatus_RELEASED {
++		var pending *nas_message.ULNASTransport
+ 		if smContext.PduSessionIDDuplicated() {
+ 			ue.ProducerLog.Infof("Local release duplicated SmContext[%d]", pduSessionID)
+ 			smContext.SetDuplicatedPduSessionID(false)
++			pending = smContext.TakeULNASTransport()
+ 		} else {
+ 			ue.ProducerLog.Infof("Release SmContext[%d] (Cause: %s)", pduSessionID,
+ 				smContextStatusNotification.StatusInfo.Cause)
+ 		}
+ 		ue.DeleteSmContext(pduSessionID, smContext.AccessType())
++		// [f5g patch] the old session is gone: establish the new one that arrived with the same
++		// PSI (stored by the UL NAS Transport handler; upstream never re-processed it)
++		if pending != nil {
++			ue.ProducerLog.Infof("Re-process PDU session establishment for duplicated PSI[%d]", pduSessionID)
++			if _, err := gmm.CreatePDUSession(pending, ue, smContext.AccessType(), pduSessionID,
++				pending.PayloadCntr.Contents); err != nil {
++				ue.ProducerLog.Errorf("Re-processing PDU session establishment PSI[%d] failed: %v", pduSessionID, err)
++			}
++		}
+ 	} else {
+ 		problemDetails := &models.ProblemDetails{
+ 			Status: http.StatusBadRequest,

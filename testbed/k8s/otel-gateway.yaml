@@ -1,0 +1,75 @@
+# Cluster gateway (one replica, telemetry node): OTLP traces from the NFs, Kubernetes events
+# (a first-class modality: probe failures, restarts, rescheduling), cluster object state, and
+# the NFs' own /metrics (pods annotated f5g/scrape=true). Pushes to the storage tier.
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+  k8sobjects:
+    objects:
+      - name: events
+        mode: watch
+        namespaces: [f5g, f5g-telemetry]
+  k8s_cluster:
+    collection_interval: 5s
+    node_conditions_to_report: [Ready, MemoryPressure, DiskPressure, PIDPressure]
+    allocatable_types_to_report: [cpu, memory]
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: f5g-pods
+          scrape_interval: 5s
+          kubernetes_sd_configs:
+            - role: pod
+              namespaces: { names: [f5g, f5g-telemetry] }
+          relabel_configs:
+            - { source_labels: [__meta_kubernetes_pod_annotation_f5g_scrape], regex: "true", action: keep }
+            - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_f5g_metrics_port]
+              regex: "(.+);(.+)"
+              replacement: "$${1}:$${2}"
+              target_label: __address__
+            - { source_labels: [__meta_kubernetes_pod_label_app], target_label: nf }
+            - { source_labels: [__meta_kubernetes_pod_name], target_label: pod }
+            - { source_labels: [__meta_kubernetes_pod_node_name], target_label: node }
+
+processors:
+  batch: {}
+  resource/run:
+    attributes:
+      - { key: run.id, value: "${env:RUN_ID}", action: upsert }
+  transform/events:
+    error_mode: ignore
+    log_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], "k8s-events")
+
+exporters:
+  otlp/tempo:
+    endpoint: ${env:STORE_HOST}:14317
+    tls: { insecure: true }
+  otlphttp/loki:
+    endpoint: http://${env:STORE_HOST}:3100/otlp
+  prometheusremotewrite:
+    endpoint: http://${env:STORE_HOST}:9090/api/v1/write
+    external_labels: { run_id: "${env:RUN_ID}" }
+    resource_to_telemetry_conversion: { enabled: true }
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [resource/run, batch]
+      exporters: [otlp/tempo]
+    logs/events:
+      receivers: [k8sobjects]
+      processors: [transform/events, resource/run, batch]
+      exporters: [otlphttp/loki]
+    metrics/nf:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [prometheusremotewrite]
+    metrics/cluster:
+      receivers: [k8s_cluster]
+      processors: [batch]
+      exporters: [prometheusremotewrite]

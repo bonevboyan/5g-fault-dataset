@@ -1,0 +1,1339 @@
+{
+  "run_id": "m1b-logtime4",
+  "phase": "done",
+  "started_at": "2026-09-28T10:08:05.679+00:00",
+  "backend": "k8s",
+  "ran": {
+    "gnbs": 3,
+    "ues_per_gnb": 50,
+    "ues": 150
+  },
+  "tracing": true,
+  "sbi_tls": true,
+  "store": "127.0.0.1",
+  "host": {
+    "kernel": "7.0.0-34-generic",
+    "cpus": 20,
+    "node": "boyan-bonev-Yoga-Slim-7-ProX-14IAH7"
+  },
+  "gates": [
+    {
+      "gate": "gtp5g loaded",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "gate": "storage tier reachable",
+      "ok": true,
+      "seconds": 0.05
+    },
+    {
+      "gate": "cluster roles Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "otel-gateway Ready",
+      "ok": true,
+      "seconds": 2.21
+    },
+    {
+      "gate": "logs + metrics reach storage",
+      "ok": true,
+      "seconds": 6.06
+    },
+    {
+      "gate": "mongo Ready",
+      "ok": true,
+      "seconds": 2.22
+    },
+    {
+      "gate": "nrf SBI up (https)",
+      "ok": true,
+      "seconds": 3.61
+    },
+    {
+      "gate": "upf started",
+      "ok": true,
+      "seconds": 6.87
+    },
+    {
+      "gate": "all NF types registered in NRF",
+      "ok": true,
+      "seconds": 2.64
+    },
+    {
+      "gate": "smf<->upf PFCP association",
+      "ok": true,
+      "seconds": 0.12
+    },
+    {
+      "gate": "amf Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "ausf Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "udm Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "udr Ready",
+      "ok": true,
+      "seconds": 0.09
+    },
+    {
+      "gate": "pcf Ready",
+      "ok": true,
+      "seconds": 0.09
+    },
+    {
+      "gate": "nssf Ready",
+      "ok": true,
+      "seconds": 1.2
+    },
+    {
+      "gate": "smf Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "chf Ready",
+      "ok": true,
+      "seconds": 1.22
+    },
+    {
+      "gate": "webui Ready",
+      "ok": true,
+      "seconds": 0.1
+    },
+    {
+      "gate": "traces reach storage",
+      "ok": true,
+      "seconds": 0.01
+    },
+    {
+      "gate": "150 subscribers provisioned",
+      "ok": true
+    },
+    {
+      "gate": "gnb-0 NG Setup",
+      "ok": true,
+      "seconds": 1.28
+    },
+    {
+      "gate": "gnb-1 NG Setup",
+      "ok": true,
+      "seconds": 0.11
+    },
+    {
+      "gate": "gnb-2 NG Setup",
+      "ok": true,
+      "seconds": 2.38
+    },
+    {
+      "gate": "150 UEs registered + PDU sessions with TUN",
+      "ok": true,
+      "seconds": 4.67
+    },
+    {
+      "gate": "no pod restarts during bring-up",
+      "ok": true,
+      "seconds": 0.15
+    }
+  ],
+  "images_reimported": [],
+  "node_cpusets": {
+    "server-0": "12-15",
+    "agent-0": "0-5",
+    "agent-1": "6-11"
+  },
+  "config_sha256": "6ea356756e73aa1fdfd6ec4326fd20b308be664de8ef0ad936509e4023a92792",
+  "tun_repairs": 1,
+  "ue_states": {
+    "imsi-208930000000002": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000005": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000001": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000004": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000003": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000008": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000006": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000010": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000012": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000011": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000009": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000015": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000014": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000013": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000016": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000007": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000018": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000017": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000019": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000025": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000021": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000020": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000023": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000022": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000030": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000026": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000029": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000031": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000027": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000036": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000042": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000028": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000035": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000024": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000033": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000034": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000032": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000038": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000043": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000041": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000044": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000040": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000039": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000045": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000046": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000049": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000037": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000048": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000050": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000047": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 0,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000054": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000063": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000051": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000052": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000055": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000053": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000057": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000056": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000061": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000064": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000060": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000062": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000065": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000058": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000059": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000070": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000069": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000072": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000073": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000071": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000066": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000068": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000067": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000074": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000076": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000078": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000075": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000084": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000085": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000080": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000081": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000082": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000083": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000087": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000086": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000077": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000079": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000089": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000090": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000097": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000088": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000099": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000096": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000100": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000095": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000094": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000098": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000091": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000092": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000093": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 1,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000103": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000106": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000101": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000104": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000108": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000102": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000109": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000110": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000107": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000111": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000105": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000113": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000114": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000115": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000118": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000116": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000117": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000124": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000122": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000121": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000112": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000119": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000125": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000120": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000127": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000129": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000128": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000123": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000130": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000126": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000133": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000136": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000131": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000134": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000132": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000142": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000140": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000135": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000139": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000143": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000144": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000145": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000138": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000146": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000137": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000149": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000141": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000148": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000147": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000150": {
+      "rm": "RM-REGISTERED",
+      "cm": "CM-CONNECTED",
+      "gnb": 2,
+      "pdu_sessions": 2
+    }
+  },
+  "ready_at": "2026-09-28T10:09:22.469+00:00",
+  "pods": {
+    "amf-5c56865846-pgwpn": {
+      "app": "amf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.124",
+      "uid": "6920d341-cc71-434e-a535-378b614effb8",
+      "image": "docker.io/free5gc/amf:otel2",
+      "image_id": "sha256:a59acca63bbc92aea3b8eb04486fd671bdbeb44a3e61812b7a4db5754f5c5746",
+      "restarts": 0
+    },
+    "ausf-86c7c99df6-pjh2v": {
+      "app": "ausf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.125",
+      "uid": "6113c641-e4c0-44cb-a6e7-c7a06ac18a60",
+      "image": "docker.io/free5gc/ausf:otel2",
+      "image_id": "sha256:88a741f5d93a588793635a9530577ae37bf346b2acee4127c4a0b473db9f47fa",
+      "restarts": 0
+    },
+    "chf-7954dccb6b-wgdfj": {
+      "app": "chf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.131",
+      "uid": "d8e9ae34-3a29-4b26-956c-40b28d23baf9",
+      "image": "docker.io/free5gc/chf:otel2",
+      "image_id": "sha256:124f33d22e73ac1bae64effa295befd8dc7c67f2928a87ff682bd4f136587492",
+      "restarts": 0
+    },
+    "db-54b97558ff-9h749": {
+      "app": "db",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.121",
+      "uid": "19287aba-49cc-424f-8ae3-aa8fb985c157",
+      "image": "docker.io/library/mongo:4.4",
+      "image_id": "sha256:0010f63d26952bd3960fac5513c64a1cf7d6299f31fa7b54ac1b36633ee04333",
+      "restarts": 0
+    },
+    "gnb-0-5bd6747fdf-bbbhq": {
+      "app": "gnb-0",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.41",
+      "uid": "a4f4757b-d073-466f-bd24-00a3061460ce",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-1-699745dd96-pk9hd": {
+      "app": "gnb-1",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.42",
+      "uid": "6fd37565-484b-449e-b9a4-82393040f449",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-2-6bf4c754d7-7r4tt": {
+      "app": "gnb-2",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.43",
+      "uid": "a3651ac2-96f9-4ee0-961e-f6d0842ce0f5",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "nrf-749c78886-pb69s": {
+      "app": "nrf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.122",
+      "uid": "c2afdcd3-4c14-4ea5-a309-86c2fbca9383",
+      "image": "docker.io/free5gc/nrf:otel2",
+      "image_id": "sha256:1cb1c38a3e873b8822608fb9f0d7a7732c8566a33c01a1b1bff76e6c0f5e1ebb",
+      "restarts": 0
+    },
+    "nssf-5ddfbdb7f8-zc29s": {
+      "app": "nssf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.129",
+      "uid": "10f8b48a-0dba-4362-9c43-2c097cff68c7",
+      "image": "docker.io/free5gc/nssf:otel2",
+      "image_id": "sha256:84fd5b9ced825bf12590517cfe88e8d7372e60e3c5baf3964474b522503c6a65",
+      "restarts": 0
+    },
+    "pcf-6cbb77c48b-gssts": {
+      "app": "pcf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.128",
+      "uid": "c9d9faf4-b669-4010-aa9d-14d2ea33f81c",
+      "image": "docker.io/free5gc/pcf:otel2",
+      "image_id": "sha256:270e739e8e58b8fece54c39bcb572022dc34164d0a833ec0d607d1f9807d2b0b",
+      "restarts": 0
+    },
+    "smf-66888bb8f9-kd4qc": {
+      "app": "smf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.130",
+      "uid": "dbdff97b-aaa8-4de8-99b6-1425cee686e9",
+      "image": "docker.io/free5gc/smf:otel2",
+      "image_id": "sha256:3d200edf5dcb9088175c9f36ae9becac8b90701f964fe66613075c5bb7a3097e",
+      "restarts": 0
+    },
+    "udm-799db68cd6-cbnvr": {
+      "app": "udm",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.126",
+      "uid": "66907f4d-62f8-461a-93f0-93c4420aecc1",
+      "image": "docker.io/free5gc/udm:otel2",
+      "image_id": "sha256:77b40f61beabc1a288a982c2ab2115b6d7ff2e06784e1613dedb4f8583cf3832",
+      "restarts": 0
+    },
+    "udr-564d77f94-d9h2j": {
+      "app": "udr",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.127",
+      "uid": "6201bf09-1612-438a-bc91-bc03f12566a6",
+      "image": "docker.io/free5gc/udr:otel2",
+      "image_id": "sha256:1fdce81b62e915731bd659fb8837036fb58e8fb820fa73111950ac518750b159",
+      "restarts": 0
+    },
+    "upf-7469d55486-zz9k4": {
+      "app": "upf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.123",
+      "uid": "c31255dc-b193-4a5a-b7a7-67c550766e77",
+      "image": "docker.io/library/busybox:1.37",
+      "image_id": "sha256:30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb",
+      "restarts": 0
+    },
+    "webui-7cc657c45d-gnxjf": {
+      "app": "webui",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.132",
+      "uid": "f50a6e7e-109d-4fee-ba7b-4dd56c7b43f3",
+      "image": "docker.io/free5gc/webui:otel2",
+      "image_id": "sha256:b4b26b2de90f49aa3634e294c4e551a0fc04ad1c8e6726dadf9ca18c02ce88cc",
+      "restarts": 0
+    }
+  },
+  "workload_started_at": "2026-09-28T10:09:22.637+00:00",
+  "workload_ended_at": "2026-09-28T10:12:24.206+00:00",
+  "pods_at_end": {
+    "amf-5c56865846-pgwpn": {
+      "app": "amf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.124",
+      "uid": "6920d341-cc71-434e-a535-378b614effb8",
+      "image": "docker.io/free5gc/amf:otel2",
+      "image_id": "sha256:a59acca63bbc92aea3b8eb04486fd671bdbeb44a3e61812b7a4db5754f5c5746",
+      "restarts": 0
+    },
+    "ausf-86c7c99df6-pjh2v": {
+      "app": "ausf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.125",
+      "uid": "6113c641-e4c0-44cb-a6e7-c7a06ac18a60",
+      "image": "docker.io/free5gc/ausf:otel2",
+      "image_id": "sha256:88a741f5d93a588793635a9530577ae37bf346b2acee4127c4a0b473db9f47fa",
+      "restarts": 0
+    },
+    "chf-7954dccb6b-wgdfj": {
+      "app": "chf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.131",
+      "uid": "d8e9ae34-3a29-4b26-956c-40b28d23baf9",
+      "image": "docker.io/free5gc/chf:otel2",
+      "image_id": "sha256:124f33d22e73ac1bae64effa295befd8dc7c67f2928a87ff682bd4f136587492",
+      "restarts": 0
+    },
+    "db-54b97558ff-9h749": {
+      "app": "db",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.121",
+      "uid": "19287aba-49cc-424f-8ae3-aa8fb985c157",
+      "image": "docker.io/library/mongo:4.4",
+      "image_id": "sha256:0010f63d26952bd3960fac5513c64a1cf7d6299f31fa7b54ac1b36633ee04333",
+      "restarts": 0
+    },
+    "gnb-0-5bd6747fdf-bbbhq": {
+      "app": "gnb-0",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.41",
+      "uid": "a4f4757b-d073-466f-bd24-00a3061460ce",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-1-699745dd96-pk9hd": {
+      "app": "gnb-1",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.42",
+      "uid": "6fd37565-484b-449e-b9a4-82393040f449",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "gnb-2-6bf4c754d7-7r4tt": {
+      "app": "gnb-2",
+      "node": "k3d-f5g-agent-1",
+      "ip": "10.42.1.43",
+      "uid": "a3651ac2-96f9-4ee0-961e-f6d0842ce0f5",
+      "image": "docker.io/free5gc/ueransim:latest",
+      "image_id": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+      "restarts": 0
+    },
+    "nrf-749c78886-pb69s": {
+      "app": "nrf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.122",
+      "uid": "c2afdcd3-4c14-4ea5-a309-86c2fbca9383",
+      "image": "docker.io/free5gc/nrf:otel2",
+      "image_id": "sha256:1cb1c38a3e873b8822608fb9f0d7a7732c8566a33c01a1b1bff76e6c0f5e1ebb",
+      "restarts": 0
+    },
+    "nssf-5ddfbdb7f8-zc29s": {
+      "app": "nssf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.129",
+      "uid": "10f8b48a-0dba-4362-9c43-2c097cff68c7",
+      "image": "docker.io/free5gc/nssf:otel2",
+      "image_id": "sha256:84fd5b9ced825bf12590517cfe88e8d7372e60e3c5baf3964474b522503c6a65",
+      "restarts": 0
+    },
+    "pcf-6cbb77c48b-gssts": {
+      "app": "pcf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.128",
+      "uid": "c9d9faf4-b669-4010-aa9d-14d2ea33f81c",
+      "image": "docker.io/free5gc/pcf:otel2",
+      "image_id": "sha256:270e739e8e58b8fece54c39bcb572022dc34164d0a833ec0d607d1f9807d2b0b",
+      "restarts": 0
+    },
+    "smf-66888bb8f9-kd4qc": {
+      "app": "smf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.130",
+      "uid": "dbdff97b-aaa8-4de8-99b6-1425cee686e9",
+      "image": "docker.io/free5gc/smf:otel2",
+      "image_id": "sha256:3d200edf5dcb9088175c9f36ae9becac8b90701f964fe66613075c5bb7a3097e",
+      "restarts": 0
+    },
+    "udm-799db68cd6-cbnvr": {
+      "app": "udm",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.126",
+      "uid": "66907f4d-62f8-461a-93f0-93c4420aecc1",
+      "image": "docker.io/free5gc/udm:otel2",
+      "image_id": "sha256:77b40f61beabc1a288a982c2ab2115b6d7ff2e06784e1613dedb4f8583cf3832",
+      "restarts": 0
+    },
+    "udr-564d77f94-d9h2j": {
+      "app": "udr",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.127",
+      "uid": "6201bf09-1612-438a-bc91-bc03f12566a6",
+      "image": "docker.io/free5gc/udr:otel2",
+      "image_id": "sha256:1fdce81b62e915731bd659fb8837036fb58e8fb820fa73111950ac518750b159",
+      "restarts": 0
+    },
+    "upf-7469d55486-zz9k4": {
+      "app": "upf",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.123",
+      "uid": "c31255dc-b193-4a5a-b7a7-67c550766e77",
+      "image": "docker.io/library/busybox:1.37",
+      "image_id": "sha256:30ecbe1509090b38ef3260f3609d64d8261230464eaa4d235901db496e9647fb",
+      "restarts": 0
+    },
+    "webui-7cc657c45d-gnxjf": {
+      "app": "webui",
+      "node": "k3d-f5g-agent-0",
+      "ip": "10.42.0.132",
+      "uid": "f50a6e7e-109d-4fee-ba7b-4dd56c7b43f3",
+      "image": "docker.io/free5gc/webui:otel2",
+      "image_id": "sha256:b4b26b2de90f49aa3634e294c4e551a0fc04ad1c8e6726dadf9ca18c02ce88cc",
+      "restarts": 0
+    }
+  },
+  "restarts_during_run": {},
+  "procedure_timing": "workload/procedures_timed.jsonl"
+}

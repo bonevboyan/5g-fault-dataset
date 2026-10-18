@@ -1,0 +1,40 @@
+# M0 de-risk: distributed tracing for free5GC via Beyla (eBPF) -> Jaeger.
+# Beyla runs in the host PID namespace, instruments the Go NF binaries, and
+# enables eBPF context propagation so parent/child spans are stitched across NFs
+# over the HTTP/2 SBI (free5GC uses direct SBI, no SCP L7 proxy, so TCP/IP
+# context propagation is not disrupted). Kernel 7.0 satisfies the >=5.17 requirement.
+services:
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:1.62.0
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"   # Jaeger UI
+      - "4317:4317"     # OTLP gRPC
+      - "4318:4318"     # OTLP HTTP
+    networks:
+      - privnet
+
+  beyla:
+    container_name: beyla
+    image: grafana/beyla:2.6.4
+    privileged: true
+    pid: "host"
+    network_mode: "host"     # so it can reach jaeger on localhost:4317 and see all NFs
+    environment:
+      BEYLA_BPF_ENABLE_CONTEXT_PROPAGATION: "true"   # the key switch for parent_id stitching
+      BEYLA_BPF_TRACK_REQUEST_HEADERS: "true"
+      BEYLA_EXECUTABLE_NAME: "amf|smf|nrf|ausf|udm|udr|pcf|nssf|upf"
+      BEYLA_OTEL_TRACES_EXPORTER: "otlp"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:4317"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "free5gc"
+      BEYLA_LOG_LEVEL: "info"
+    depends_on:
+      - jaeger
+
+networks:
+  privnet:
+    external: true
+    name: free5gc-compose_privnet

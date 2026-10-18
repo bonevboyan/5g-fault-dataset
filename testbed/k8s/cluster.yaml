@@ -1,0 +1,49 @@
+# k3d cluster for the 5G fault dataset testbed. Logical multi-node: every node is a container on
+# this host (shared kernel), and `tb cluster-up` pins each node container to its own cpuset so
+# the system under test, the load generator and the observers don't compete for CPU:
+#   server-0  role=telemetry  cpus 12-15 (E-cores)  k3s control plane, collectors
+#   agent-0   role=core       cpus 0-5   (P-cores)  free5GC NFs, UPF, MongoDB
+#   agent-1   role=ran        cpus 6-11  (P-cores)  UERANSIM gNB/UE pods
+# The storage tier (../storage, docker compose) gets cpus 16-19.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: f5g
+servers: 1
+agents: 2
+image: rancher/k3s:v1.31.5-k3s1
+options:
+  k3d:
+    wait: true
+    timeout: "300s"
+  k3s:
+    extraArgs:
+      - arg: --disable=traefik,servicelb,metrics-server
+        nodeFilters: [server:*]
+      # the host disk is shared with everything else on the laptop: kubelet's defaults would
+      # garbage-collect our (never-pullable, imported) images above 85% use and evict pods below
+      # 10% free, both mid-experiment. Keep images; only evict when the disk is nearly full.
+      - arg: --kubelet-arg=image-gc-high-threshold=100
+        nodeFilters: [all]
+      - arg: --kubelet-arg=image-gc-low-threshold=99
+        nodeFilters: [all]
+      - arg: --kubelet-arg=eviction-hard=nodefs.available<2%,imagefs.available<2%
+        nodeFilters: [all]
+      # k3s defaults eviction-minimum-reclaim to 10%: once below 2% the node stays tainted
+      # disk-pressure (and the eviction manager deletes our imported images) until 12% is free (kubelet rejects 0%; 1% means pressure ends at 3% free).
+      - arg: --kubelet-arg=eviction-minimum-reclaim=nodefs.available=1%,imagefs.available=1%
+        nodeFilters: [all]
+      - arg: --kubelet-arg=eviction-pressure-transition-period=30s
+        nodeFilters: [all]
+    nodeLabels:
+      - label: role=telemetry
+        nodeFilters: [server:0]
+      - label: role=core
+        nodeFilters: [agent:0]
+      - label: role=ran
+        nodeFilters: [agent:1]
+volumes:
+  - volume: /dev/net/tun:/dev/net/tun      # UERANSIM UE TUN devices
+    nodeFilters: [agent:1]
+  - volume: /lib/modules:/lib/modules:ro   # gtp5g (UPF) and sctp from the host kernel
+    nodeFilters: [all]

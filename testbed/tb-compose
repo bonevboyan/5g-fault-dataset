@@ -1,0 +1,428 @@
+#!/usr/bin/env python3
+"""tb-compose — M1 docker-compose testbed control (superseded by the k8s `tb`) for the 5G core fault-injection dataset (milestone M1).
+
+  tb store-up | store-down          storage tier (Tempo/Loki/Prometheus/Grafana), long-lived
+  tb up [--ues N] [--run-id ID]     clean rebuild: wipe tier 1, staged + readiness-gated bring-up,
+                                    provision N subscribers, start N UEs, write runs/<id>/manifest.json
+  tb run [--ues N] [--duration S]   up + N-UE workload (runs/<id>/workload/) + teardown (--keep to stay)
+  tb gates                          re-check every readiness gate against the live stack
+  tb ues                            per-UE registration / PDU-session state
+  tb down                           tear tier 1 down (volumes included)
+
+Every `up` is a from-scratch rebuild (fresh Mongo, fresh NRF state), so no run inherits state
+from the previous one. Gates must pass before the run is declared READY; a failed gate aborts
+with the offending component named, and the partial manifest is still written.
+"""
+import argparse, copy, datetime as dt, hashlib, json, os, platform, re, shutil, subprocess, sys, time
+import urllib.error, urllib.request
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "workload"))
+import ue  # noqa: E402
+from ue import imsi  # noqa: E402
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+CORE = os.path.join(ROOT, "compose.core.yaml")
+STORE = os.path.join(ROOT, "storage", "compose.yaml")
+RUNS = os.path.join(ROOT, "..", "runs")
+WEBUI = "http://127.0.0.1:5000"
+PLMN = "20893"
+
+CP_NFS = ["free5gc-amf", "free5gc-ausf", "free5gc-udm", "free5gc-udr",
+          "free5gc-pcf", "free5gc-nssf", "free5gc-smf", "free5gc-chf"]
+NF_TYPES = {"AMF", "AUSF", "UDM", "UDR", "PCF", "NSSF", "SMF", "CHF"}
+AGENTS = ["otel-collector", "cadvisor", "node-exporter"]
+
+
+def log(msg):
+    print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def sh(*args, check=True, capture=True, env=None):
+    r = subprocess.run(args, capture_output=capture, text=True, env=env)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"{' '.join(args)} failed ({r.returncode}): {r.stderr.strip()}")
+    return r.stdout if capture else ""
+
+
+def store_for_container(store):
+    """The storage tier as the collector container sees it (loopback means the Docker host)."""
+    return "host.docker.internal" if store in ("127.0.0.1", "localhost") else store
+
+
+def runtime_env(run_id="none", store="127.0.0.1"):
+    """Variables compose.core.yaml interpolates. DOCKER_ROOT differs on snap/rootless Docker."""
+    root = sh("docker", "info", "--format", "{{.DockerRootDir}}").strip() or "/var/lib/docker"
+    return dict(os.environ, RUN_ID=run_id, DOCKER_ROOT=root, STORE_HOST=store_for_container(store),
+                CERT_DIR=os.path.join(ROOT, ".state", "cert"))
+
+
+def compose(*args, env=None):
+    return sh("docker", "compose", "-f", CORE, *args, env=env or runtime_env())
+
+
+def dexec(container, *cmd, check=False):
+    r = subprocess.run(["docker", "exec", container, *cmd], capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"exec {container} {cmd}: {r.stderr.strip()}")
+    return r.stdout
+
+
+def logs(container):
+    r = subprocess.run(["docker", "logs", container], capture_output=True, text=True)
+    return r.stdout + r.stderr
+
+
+def running(container):
+    r = subprocess.run(["docker", "inspect", "-f", "{{.State.Running}}", container],
+                       capture_output=True, text=True)
+    return r.stdout.strip() == "true"
+
+
+# ---------------------------------------------------------------- readiness gates
+class GateFailed(Exception):
+    pass
+
+
+def wait_for(name, probe, timeout, interval=1.0, record=None):
+    """Poll probe() until it returns truthy. Records the gate's latency in the manifest."""
+    t0 = time.monotonic()
+    last = None
+    while time.monotonic() - t0 < timeout:
+        try:
+            ok = probe()
+            if ok:
+                took = round(time.monotonic() - t0, 2)
+                log(f"  gate ok   {name} ({took}s)")
+                if record is not None:
+                    record.append({"gate": name, "ok": True, "seconds": took})
+                return ok
+        except Exception as e:  # noqa: BLE001 — a failing probe just means "not yet"
+            last = e
+        time.sleep(interval)
+    if record is not None:
+        record.append({"gate": name, "ok": False, "seconds": timeout, "last_error": str(last)})
+    raise GateFailed(f"{name} not satisfied within {timeout}s" + (f" (last: {last})" if last else ""))
+
+
+def g_mongo():
+    return dexec("mongodb", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok").strip() == "1"
+
+
+def g_log(container, pattern):
+    def probe():
+        if not running(container):
+            raise RuntimeError(f"{container} is not running")
+        return re.search(pattern, logs(container)) is not None
+    return probe
+
+
+def nf_types_registered():
+    out = dexec("mongodb", "mongo", "free5gc", "--quiet", "--eval",
+                'JSON.stringify(db.NfProfile.distinct("nfType"))')
+    return set(json.loads(out.strip() or "[]"))
+
+
+def g_nfs_registered():
+    missing = NF_TYPES - nf_types_registered()
+    if missing:
+        raise RuntimeError(f"not registered with NRF: {sorted(missing)}")
+    return True
+
+
+def g_webui():
+    return webui_token() is not None
+
+
+def g_gtp5g():
+    with open("/proc/modules") as f:
+        if not any(l.startswith("gtp5g ") for l in f):
+            raise RuntimeError("gtp5g kernel module not loaded (run scripts/01-load-gtp5g.sh)")
+    return True
+
+
+def g_store(host):
+    def probe():
+        for url in (f"http://{host}:3200/ready", f"http://{host}:3100/ready",
+                    f"http://{host}:9090/-/ready"):
+            with urllib.request.urlopen(url, timeout=2) as r:
+                if r.status != 200:
+                    raise RuntimeError(f"{url} -> {r.status}")
+        return True
+    return probe
+
+
+# ---------------------------------------------------------------- subscribers
+def webui_token():
+    req = urllib.request.Request(f"{WEBUI}/api/login", method="POST",
+                                 data=json.dumps({"username": "admin", "password": "free5gc"}).encode(),
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=3) as r:
+        return json.load(r).get("access_token")
+
+
+def provision(n):
+    tmpl = json.load(open(os.path.join(ROOT, "config", "subscriber.json")))
+    tok = webui_token()
+    for i in range(n):
+        sub = imsi(i)
+        body = copy.deepcopy(tmpl)
+        body["ueId"] = sub
+        body["AuthenticationSubscription"]["sequenceNumber"] = "000000000023"
+        body["AccessAndMobilitySubscriptionData"]["gpsis"] = [f"msisdn-09{i:08d}"]  # must be unique
+        req = urllib.request.Request(f"{WEBUI}/api/subscriber/{sub}/{PLMN}", method="POST",
+                                     data=json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json", "Token": tok})
+        try:
+            urllib.request.urlopen(req, timeout=10).close()
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"provision {sub}: HTTP {e.code} {e.read().decode()[:200]}") from e
+    count = dexec("mongodb", "mongo", "free5gc", "--quiet", "--eval",
+                  "db.subscriptionData.authenticationData.authenticationSubscription.countDocuments({})")
+    if int(count.strip()) < n:
+        raise RuntimeError(f"only {count.strip()} of {n} subscribers present in UDR")
+
+
+# ---------------------------------------------------------------- UEs
+def start_ues(n, tempo_ms):
+    ue.stop_all()
+    for i in range(n):
+        ue.start(imsi(i))
+        time.sleep(tempo_ms / 1000)
+
+
+def g_ues(n, sessions=True):
+    def probe():
+        st = ue.states()
+        reg = [u for u, s in st.items() if s["rm"] == "RM-REGISTERED"]
+        sess = sum(s["pdu_sessions"] for s in st.values())
+        want = n * len(ue.SLICES) if sessions else 0
+        # NAS PS-ACTIVE is not enough: UERANSIM caps TUN devices at 1024 per container, beyond
+        # which sessions are "active" with no data path
+        tuns = len(ue.tun_by_address()) if sessions else 0
+        if len(reg) < n or sess < want or tuns < want:
+            raise RuntimeError(f"{len(reg)}/{n} UEs registered, {sess}/{want} PDU sessions, "
+                               f"{tuns}/{want} with a TUN data path")
+        return st
+    return probe
+
+
+# ---------------------------------------------------------------- manifest
+def config_digest():
+    h = hashlib.sha256()
+    for base in ("config", "collect", "cert"):
+        d = os.path.join(ROOT, base)
+        for f in sorted(os.listdir(d)):
+            h.update(f.encode())
+            h.update(open(os.path.join(d, f), "rb").read())
+    h.update(open(CORE, "rb").read())
+    return h.hexdigest()
+
+
+def image_digests():
+    out = compose("config", "--images")
+    imgs = {}
+    for img in sorted(set(out.split())):
+        r = subprocess.run(["docker", "image", "inspect", "-f", "{{.Id}}", img],
+                           capture_output=True, text=True)
+        imgs[img] = r.stdout.strip() or None
+    return imgs
+
+
+def containers():
+    out = sh("docker", "ps", "-a", "--filter", "label=com.docker.compose.project=f5g",
+             "--format", "{{.Names}}\t{{.ID}}\t{{.Label \"com.docker.compose.service\"}}")
+    rows = {}
+    for line in out.splitlines():
+        name, cid, svc = line.split("\t")
+        ip = sh("docker", "inspect", "-f",
+                "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}", name, check=False).strip()
+        rows[name] = {"id": cid, "service": svc, "ip": ip}
+    return rows
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="milliseconds")
+
+
+def write_manifest(run_dir, m):
+    os.makedirs(run_dir, exist_ok=True)
+    with open(os.path.join(run_dir, "manifest.json"), "w") as f:
+        json.dump(m, f, indent=2)
+
+
+# ---------------------------------------------------------------- commands
+def cmd_store_up(_):
+    sh("docker", "compose", "-f", STORE, "up", "-d", capture=False)
+    wait_for("storage tier ready", g_store("127.0.0.1"), 120, 2)
+
+
+def cmd_store_down(_):
+    sh("docker", "compose", "-f", STORE, "down", capture=False)
+
+
+def cmd_down(_):
+    log("tearing down tier 1 (containers + volumes)")
+    compose("down", "-v", "--remove-orphans", "--timeout", "5")
+
+
+def cmd_up(a):
+    run_id = a.run_id or dt.datetime.now().strftime("%Y%m%dT%H%M%S")
+    run_dir = os.path.join(RUNS, run_id)
+    env = runtime_env(run_id, a.store)
+    gates = []
+    m = {"run_id": run_id, "phase": "bringup", "started_at": now(), "ues": a.ues,
+         "user_plane": not a.no_upf,
+         "store": a.store,
+         "host": {"kernel": platform.release(), "cpus": os.cpu_count(), "node": platform.node()},
+         "config_sha256": config_digest(), "gates": gates}
+    log(f"run {run_id}: clean rebuild with {a.ues} UEs")
+    try:
+        if a.no_upf:
+            log("--no-upf: control plane only (no UPF, no PDU sessions)")
+        else:
+            wait_for("gtp5g loaded", g_gtp5g, 1, record=gates)
+        wait_for("storage tier reachable", g_store(a.store), 30, 2, record=gates)
+        compose("down", "-v", "--remove-orphans", "--timeout", "5", env=env)
+        # ue.py picks its backend from this layout file (the k8s `tb` writes its own)
+        os.makedirs(os.path.join(ROOT, ".state"), exist_ok=True)
+        with open(os.path.join(ROOT, ".state", "ran.json"), "w") as f:
+            json.dump({"backend": "compose", "gnbs": 1, "ues_per_gnb": ue.MAX_UES_PER_GNB}, f)
+        # NRF rewrites nrf.pem at start-up, so NFs share a writable copy that is reset every run.
+        shutil.rmtree(env["CERT_DIR"], ignore_errors=True)
+        shutil.copytree(os.path.join(ROOT, "cert"), env["CERT_DIR"])
+
+        log("stage 1: mongo + node agents + webconsole")
+        compose("up", "-d", "db", *AGENTS, env=env)
+        wait_for("mongo ping", g_mongo, 60, record=gates)
+        compose("up", "-d", "free5gc-webui", env=env)   # CHF's CGF needs the webui FTP server
+        wait_for("webui api", g_webui, 60, record=gates)
+
+        log("stage 2: NRF")
+        compose("up", "-d", "free5gc-nrf", env=env)
+        wait_for("nrf SBI up", g_log("nrf", r"SBI server started"), 30, record=gates)
+
+        if not a.no_upf:
+            log("stage 3: UPF")
+            compose("up", "-d", "free5gc-upf", env=env)
+            wait_for("upf started", g_log("upf", r"UPF started"), 30, record=gates)
+
+        log("stage 4: control-plane NFs")
+        compose("up", "-d", *CP_NFS, env=env)
+        wait_for("all NF types registered in NRF", g_nfs_registered, 60, record=gates)
+        if not a.no_upf:
+            wait_for("smf<->upf PFCP association",
+                     g_log("smf", r"PFCP Association Setup Accepted Response"), 60, record=gates)
+
+        log("stage 5: subscribers")
+        provision(a.ues)
+        gates.append({"gate": f"{a.ues} subscribers provisioned", "ok": True})
+        log(f"  gate ok   {a.ues} subscribers provisioned")
+
+        log("stage 6: gNB")
+        compose("up", "-d", "ueransim", env=env)
+        wait_for("gNB NG Setup", g_log("ueransim", r"NG Setup procedure is successful"), 30,
+                 record=gates)
+
+        if a.ues > ue.MAX_UES_PER_GNB or (not a.no_upf and a.ues * len(ue.SLICES) > ue.MAX_TUN):
+            raise RuntimeError(
+                f"{a.ues} UEs exceeds one UERANSIM container: gNB accepts <= {ue.MAX_UES_PER_GNB} UEs "
+                f"and <= {ue.MAX_TUN} TUNs ({ue.MAX_TUN // len(ue.SLICES)} UEs x {len(ue.SLICES)} sessions)")
+        log(f"stage 7: {a.ues} UEs")
+        start_ues(a.ues, a.tempo)
+        st = wait_for(f"{a.ues} UEs registered + PDU sessions", g_ues(a.ues, not a.no_upf),
+                      60 + a.ues * 2, 2, record=gates)
+        m["ue_states"] = st
+        m["phase"] = "ready"
+        log(f"READY  run={run_id}  dir={os.path.relpath(run_dir)}")
+    except Exception as e:  # noqa: BLE001 — any failure still writes the manifest
+        m["phase"] = "failed"
+        m["error"] = str(e)
+        log(f"FAILED {e}")
+    finally:
+        m["ready_at"] = now()
+        m["images"] = image_digests()
+        m["containers"] = containers()
+        write_manifest(run_dir, m)
+    if m["phase"] != "ready":
+        sys.exit(1)
+    return m
+
+
+def cmd_run(a):
+    """One dataset run: clean rebuild -> gates -> N-UE workload -> manifest [-> teardown]."""
+    m = cmd_up(a)
+    run_dir = os.path.join(RUNS, m["run_id"])
+    out = os.path.join(run_dir, "workload")
+    cmd = [sys.executable, os.path.join(ROOT, "..", "workload", "driver.py"), "--out", out,
+           "--ues", str(a.ues), "--duration", str(a.duration), "--seed", str(a.seed),
+           "--reg-interval", str(a.reg_interval), "--pdu-interval", str(a.pdu_interval)]
+    if a.no_upf:
+        cmd += ["--pdu-interval", "0"]
+    m["phase"] = "workload"
+    m["workload_started_at"] = now()
+    write_manifest(run_dir, m)
+    rc = subprocess.run(cmd).returncode
+    m["workload_ended_at"] = now()
+    m["phase"] = "done" if rc == 0 else "workload_failed"
+    m["containers_at_end"] = containers()
+    write_manifest(run_dir, m)
+    if not a.keep:
+        cmd_down(a)
+    log(f"run {m['run_id']}: {m['phase']}")
+
+
+def cmd_gates(a):
+    checks = [("gtp5g", g_gtp5g), ("storage", g_store(a.store)), ("mongo", g_mongo),
+              ("nrf", g_log("nrf", r"SBI server started")), ("nf-registration", g_nfs_registered),
+              ("pfcp", g_log("smf", r"PFCP Association Setup Accepted Response")),
+              ("webui", g_webui), ("ngsetup", g_log("ueransim", r"NG Setup procedure is successful"))]
+    bad = 0
+    for name, probe in checks:
+        try:
+            ok = bool(probe())
+            err = ""
+        except Exception as e:  # noqa: BLE001
+            ok, err = False, str(e)
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {name} {err}")
+    sys.exit(1 if bad else 0)
+
+
+def cmd_ues(_):
+    st = ue.states()
+    for u, s in sorted(st.items()):
+        addrs = ",".join(x["address"] or "-" for x in s["sessions"])
+        print(f"{u}  {s['rm']:<16} {s['mm']:<30} pdu={s['pdu_sessions']} {addrs}")
+    reg = sum(s["rm"] == "RM-REGISTERED" for s in st.values())
+    print(f"-- {reg}/{len(st)} registered, {sum(s['pdu_sessions'] for s in st.values())} PDU sessions")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = p.add_subparsers(dest="cmd", required=True)
+    store = argparse.ArgumentParser(add_help=False)
+    store.add_argument("--store", default=os.environ.get("STORE_HOST", "127.0.0.1"),
+                       help="storage-tier host (default 127.0.0.1 = this machine)")
+    bring = argparse.ArgumentParser(add_help=False, parents=[store])
+    bring.add_argument("--ues", type=int, default=int(os.environ.get("TB_UES", 10)))
+    bring.add_argument("--tempo", type=int, default=200, help="ms between UE start-ups")
+    bring.add_argument("--run-id")
+    bring.add_argument("--no-upf", action="store_true", help="control-plane-only bring-up (debug)")
+    sub.add_parser("up", parents=[bring]).set_defaults(fn=cmd_up)
+    run = sub.add_parser("run", parents=[bring])
+    run.add_argument("--duration", type=float, default=300)
+    run.add_argument("--seed", type=int, default=1)
+    run.add_argument("--reg-interval", type=float, default=10.0)
+    run.add_argument("--pdu-interval", type=float, default=6.0)
+    run.add_argument("--keep", action="store_true", help="leave tier 1 running afterwards")
+    run.set_defaults(fn=cmd_run)
+    sub.add_parser("gates", parents=[store]).set_defaults(fn=cmd_gates)
+    for name, fn in [("down", cmd_down), ("ues", cmd_ues),
+                     ("store-up", cmd_store_up), ("store-down", cmd_store_down)]:
+        sub.add_parser(name).set_defaults(fn=fn)
+    a = p.parse_args()
+    a.fn(a)
+
+
+if __name__ == "__main__":
+    main()

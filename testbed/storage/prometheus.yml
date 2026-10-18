@@ -1,0 +1,6 @@
+# Samples arrive by remote-write from the node collector; this instance scrapes nothing but itself.
+global:
+  scrape_interval: 15s
+scrape_configs:
+  - job_name: store-prometheus
+    static_configs: [{ targets: ["localhost:9090"] }]

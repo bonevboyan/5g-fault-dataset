@@ -1,0 +1,38 @@
+[12:24:55] run fix-psi-tac2: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[12:24:55]   gate ok   gtp5g loaded (0.0s)
+[12:24:55]   gate ok   storage tier reachable (0.02s)
+[12:24:55]   gate ok   cluster roles Ready (0.03s)
+[12:24:56] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[12:24:58]   gate ok   otel-gateway Ready (2.09s)
+[12:25:04]   gate ok   logs + metrics reach storage (6.02s)
+[12:25:04] stage 1: mongo
+[12:25:07]   gate ok   mongo Ready (2.09s)
+[12:25:07] stage 2: NRF
+[12:25:09]   gate ok   nrf SBI up (https) (2.16s)
+[12:25:09] stage 3: UPF
+[12:25:14]   gate ok   upf started (5.31s)
+[12:25:14] stage 4: control-plane NFs + webconsole (AF)
+[12:25:17]   gate ok   all NF types registered in NRF (2.24s)
+[12:25:17]   gate ok   smf<->upf PFCP association (0.05s)
+[12:25:17]   gate ok   amf Ready (0.03s)
+[12:25:17]   gate ok   ausf Ready (0.04s)
+[12:25:21]   gate ok   udm Ready (3.18s)
+[12:25:21]   gate ok   udr Ready (0.04s)
+[12:25:21]   gate ok   pcf Ready (0.04s)
+[12:25:21]   gate ok   nssf Ready (0.06s)
+[12:25:21]   gate ok   smf Ready (0.04s)
+[12:25:21]   gate ok   chf Ready (0.04s)
+[12:25:21]   gate ok   webui Ready (0.04s)
+[12:25:24]   gate ok   traces reach storage (3.04s)
+[12:25:24] stage 5: 150 subscribers
+[12:25:25]   gate ok   webui port-forward (1.21s)
+[12:25:27]   gate ok   150 subscribers provisioned
+[12:25:27] stage 6: 3 gNBs
+[12:25:28]   gate ok   gnb-0 NG Setup (1.09s)
+[12:25:28]   gate ok   gnb-1 NG Setup (0.05s)
+[12:25:29]   gate ok   gnb-2 NG Setup (1.11s)
+[12:25:29] stage 7: 150 UEs
+[12:25:50]   gate ok   150 UEs registered + PDU sessions with TUN (5.3s)
+[12:25:50]   gate ok   no pod restarts during bring-up (0.05s)
+[12:25:50] READY  run=fix-psi-tac2  dir=../runs/fix-psi-tac2  (TUN repairs: 1)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/fix-psi-tac2/workload

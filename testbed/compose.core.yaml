@@ -1,0 +1,276 @@
+# Tier 1 — the system under test + node-local collectors.
+# free5GC v4.2.3 control plane on native-OTel images (:otel, see free5gc-otel/), UPF, webconsole,
+# UERANSIM gNB/UEs, and the on-node telemetry agents (otel-collector, cAdvisor, node-exporter).
+# Storage/query backends live in storage/compose.yaml (tier 2) and are reached only through
+# STORE_HOST, so they can move to another machine without touching this file.
+#
+# Do not `up` this directly — bin/tb brings services up in readiness-gated stages.
+name: f5g
+
+# Every container logs with its compose project/service attached, so the node collector can
+# attribute json-file log lines without the Docker socket.
+x-log: &log
+  driver: json-file
+  options:
+    labels: com.docker.compose.project,com.docker.compose.service
+    max-size: 200m
+
+x-nf: &nf
+  restart: "no"
+  logging: *log
+  networks: [privnet]
+  volumes:
+    - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+
+x-otel-env: &otel-env
+  GIN_MODE: release
+  OTEL_EXPORTER_OTLP_ENDPOINT: "otel-collector:4317"
+  OTEL_EXPORTER_OTLP_INSECURE: "true"
+
+services:
+  db:
+    container_name: mongodb
+    logging: *log
+    image: mongo:4.4
+    command: mongod --port 27017 --bind_ip_all
+    networks:
+      privnet:
+        aliases: [db]
+    healthcheck:
+      test: ["CMD", "mongo", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 2s
+      retries: 30
+
+  free5gc-nrf:
+    <<: *nf
+    container_name: nrf
+    image: free5gc/nrf:otel
+    command: ./nrf -c ./config/nrfcfg.yaml
+    volumes:
+      - ./config/nrfcfg.yaml:/free5gc/config/nrfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      DB_URI: mongodb://db/free5gc
+      OTEL_SERVICE_NAME: nrf
+    networks:
+      privnet:
+        aliases: [nrf.free5gc.org]
+
+  free5gc-amf:
+    <<: *nf
+    container_name: amf
+    image: free5gc/amf:otel
+    command: ./amf -c ./config/amfcfg.yaml
+    volumes:
+      - ./config/amfcfg.yaml:/free5gc/config/amfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: amf
+    networks:
+      privnet:
+        ipv4_address: 10.100.200.16
+        aliases: [amf.free5gc.org]
+
+  free5gc-ausf:
+    <<: *nf
+    container_name: ausf
+    image: free5gc/ausf:otel
+    command: ./ausf -c ./config/ausfcfg.yaml
+    volumes:
+      - ./config/ausfcfg.yaml:/free5gc/config/ausfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: ausf
+    networks:
+      privnet:
+        aliases: [ausf.free5gc.org]
+
+  free5gc-nssf:
+    <<: *nf
+    container_name: nssf
+    image: free5gc/nssf:otel
+    command: ./nssf -c ./config/nssfcfg.yaml
+    volumes:
+      - ./config/nssfcfg.yaml:/free5gc/config/nssfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: nssf
+    networks:
+      privnet:
+        aliases: [nssf.free5gc.org]
+
+  free5gc-pcf:
+    <<: *nf
+    container_name: pcf
+    image: free5gc/pcf:otel
+    command: ./pcf -c ./config/pcfcfg.yaml
+    volumes:
+      - ./config/pcfcfg.yaml:/free5gc/config/pcfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: pcf
+    networks:
+      privnet:
+        aliases: [pcf.free5gc.org]
+
+  free5gc-smf:
+    <<: *nf
+    container_name: smf
+    image: free5gc/smf:otel
+    command: ./smf -c ./config/smfcfg.yaml -u ./config/uerouting.yaml
+    volumes:
+      - ./config/smfcfg.yaml:/free5gc/config/smfcfg.yaml:ro
+      - ./config/uerouting.yaml:/free5gc/config/uerouting.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: smf
+    networks:
+      privnet:
+        aliases: [smf.free5gc.org]
+
+  free5gc-udm:
+    <<: *nf
+    container_name: udm
+    image: free5gc/udm:otel
+    command: ./udm -c ./config/udmcfg.yaml
+    volumes:
+      - ./config/udmcfg.yaml:/free5gc/config/udmcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      OTEL_SERVICE_NAME: udm
+    networks:
+      privnet:
+        aliases: [udm.free5gc.org]
+
+  free5gc-udr:
+    <<: *nf
+    container_name: udr
+    image: free5gc/udr:otel
+    command: ./udr -c ./config/udrcfg.yaml
+    volumes:
+      - ./config/udrcfg.yaml:/free5gc/config/udrcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      DB_URI: mongodb://db/free5gc
+      OTEL_SERVICE_NAME: udr
+    networks:
+      privnet:
+        aliases: [udr.free5gc.org]
+
+  free5gc-chf:
+    <<: *nf
+    container_name: chf
+    image: free5gc/chf:otel
+    command: ./chf -c ./config/chfcfg.yaml
+    volumes:
+      - ./config/chfcfg.yaml:/free5gc/config/chfcfg.yaml:ro
+      - ${CERT_DIR:-./.state/cert}:/free5gc/cert
+    environment:
+      <<: *otel-env
+      DB_URI: mongodb://db/free5gc
+      OTEL_SERVICE_NAME: chf
+    networks:
+      privnet:
+        aliases: [chf.free5gc.org]
+
+  free5gc-upf:
+    container_name: upf
+    logging: *log
+    image: free5gc/upf:v4.2.3
+    command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
+    volumes:
+      - ./config/upfcfg.yaml:/free5gc/config/upfcfg.yaml:ro
+      - ./config/upf-iptables.sh:/free5gc/upf-iptables.sh:ro
+    cap_add: [NET_ADMIN]
+    networks:
+      privnet:
+        aliases: [upf.free5gc.org]
+
+  free5gc-webui:
+    container_name: webui
+    logging: *log
+    image: free5gc/webui:v4.2.3
+    command: ./webui -c ./config/webuicfg.yaml
+    volumes:
+      - ./config/webuicfg.yaml:/free5gc/config/webuicfg.yaml:ro
+    environment:
+      GIN_MODE: release
+    ports:
+      - "127.0.0.1:5000:5000"
+    networks:
+      privnet:
+        aliases: [webui]
+
+  ueransim:
+    container_name: ueransim
+    logging: *log
+    image: free5gc/ueransim:latest
+    command: ./nr-gnb -c ./config/gnbcfg.yaml
+    volumes:
+      - ./config/gnbcfg.yaml:/ueransim/config/gnbcfg.yaml:ro
+      - ./config/uecfg.yaml:/ueransim/config/uecfg.yaml:ro
+    cap_add: [NET_ADMIN]
+    devices: ["/dev/net/tun"]
+    networks:
+      privnet:
+        aliases: [gnb.free5gc.org]
+
+  # ---- node-local telemetry agents (tier 1) ------------------------------------------------
+  otel-collector:
+    container_name: otel-collector
+    logging: *log
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    command: ["--config=/etc/otelcol/config.yaml"]
+    user: "0:0"   # needs to read /var/lib/docker/containers/*/*.log
+    volumes:
+      - ./collect/otelcol.yaml:/etc/otelcol/config.yaml:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro
+    environment:
+      STORE_HOST: ${STORE_HOST:-host.docker.internal}
+      RUN_ID: ${RUN_ID:-none}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      privnet:
+        aliases: [otel-collector]
+
+  cadvisor:
+    container_name: cadvisor
+    logging: *log
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    privileged: true
+    command: ["--docker_only=true", "--housekeeping_interval=2s", "--store_container_labels=false",
+              "--whitelisted_container_labels=com.docker.compose.service,com.docker.compose.project"]
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
+    networks: [privnet]
+
+  node-exporter:
+    container_name: node-exporter
+    logging: *log
+    image: prom/node-exporter:v1.8.2
+    command: ["--path.rootfs=/host"]
+    pid: host
+    volumes:
+      - /:/host:ro
+    networks: [privnet]
+
+networks:
+  privnet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.100.200.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br-free5gc

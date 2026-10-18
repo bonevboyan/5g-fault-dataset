@@ -1,0 +1,28 @@
+# OTel Instrumentation for free5GC's Go NFs -> Tempo.
+# Go auto-instrumentation is eBPF-based (opentelemetry-go-instrumentation): it does
+# Go library-level HTTP context propagation, which is exactly free5GC's case
+# (Go + HTTP/2 SBI) and is what yields real parent/child spans across NFs.
+#
+# Per-NF, the pod must carry:
+#   instrumentation.opentelemetry.io/inject-go: "free5gc/free5gc-go"
+#   instrumentation.opentelemetry.io/otel-go-auto-target-exe: "/free5gc/<nf>"   # binary path in the image
+# and the injected sidecar needs privileged + shareProcessNamespace (operator adds these).
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: free5gc-go
+  namespace: free5gc
+spec:
+  exporter:
+    endpoint: http://tempo.observability.svc.cluster.local:4317
+  propagators:
+    - tracecontext
+    - baggage
+  sampler:
+    type: always_on
+  go:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://tempo.observability.svc.cluster.local:4317
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc

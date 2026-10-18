@@ -1,0 +1,59 @@
+# Tier 2 — storage & query backends. Independent compose project with its own lifetime: it
+# outlives testbed rebuilds (runs are separated by the run_id label, not by wiping storage) and
+# can be moved to another host; the node tier only needs STORE_HOST pointed at it.
+#   Tempo  (traces)  OTLP gRPC :14317, query API :3200
+#   Loki   (logs)    OTLP/HTTP + query :3100
+#   Prom   (metrics) remote-write + query :9090
+#   Grafana          :3300 (admin/admin)
+name: f5g-store
+
+services:
+  tempo:
+    image: grafana/tempo:2.6.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    user: "0:0"
+    volumes:
+      - ./tempo.yaml:/etc/tempo.yaml:ro
+      - tempo:/var/tempo
+    ports: ["14317:4317", "3200:3200"]
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:3.3.2
+    command: ["-config.file=/etc/loki.yaml"]
+    user: "0:0"
+    volumes:
+      - ./loki.yaml:/etc/loki.yaml:ro
+      - loki:/loki
+    ports: ["3100:3100"]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.1.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=90d
+      - --web.enable-remote-write-receiver
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus:/prometheus
+    ports: ["9090:9090"]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana:/var/lib/grafana
+    ports: ["3300:3000"]
+    restart: unless-stopped
+
+volumes:
+  tempo:
+  loki:
+  prometheus:
+  grafana:

@@ -1,0 +1,84 @@
+
+######## N = 400
+[15:52:36] run sweep-20260927T1552-n400: clean rebuild with 400 UEs
+[15:52:36]   gate ok   gtp5g loaded (0.0s)
+[15:52:36]   gate ok   storage tier reachable (0.02s)
+[15:52:36] stage 1: mongo + node agents + webconsole
+[15:52:38]   gate ok   mongo ping (1.18s)
+[15:52:40]   gate ok   webui api (1.18s)
+[15:52:40] stage 2: NRF
+[15:52:42]   gate ok   nrf SBI up (1.07s)
+[15:52:42] stage 3: UPF
+[15:52:43]   gate ok   upf started (0.02s)
+[15:52:43] stage 4: control-plane NFs
+[15:52:44]   gate ok   all NF types registered in NRF (0.08s)
+[15:52:44]   gate ok   smf<->upf PFCP association (0.03s)
+[15:52:44] stage 5: subscribers
+[15:52:47]   gate ok   400 subscribers provisioned
+[15:52:47] stage 6: gNB
+[15:52:47]   gate ok   gNB NG Setup (0.04s)
+[15:52:47] stage 7: 400 UEs
+[15:54:12]   gate ok   400 UEs registered + PDU sessions (0.95s)
+[15:54:12] READY  run=sweep-20260927T1552-n400  dir=../runs/sweep-20260927T1552-n400
+workload: 400 UEs, 150.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/sweep-20260927T1552-n400/workload
+pings: 4096  loss: 0.00%  rtt p50: 0.59 ms
+deregistration_switch_off            n=14   ok=14   aborted=0  t3580=0  p50=698 ms
+initial_registration                 n=14   ok=14   aborted=0  t3580=0  p50=206 ms
+pdu_session_establishment            n=25   ok=25   aborted=0  t3580=7  p50=873 ms
+pdu_session_establishment_initial    n=14   ok=14   aborted=0  t3580=0  p50=361 ms
+pdu_session_release                  n=25   ok=25   aborted=0  t3580=0  p50=151 ms
+[15:57:13] run sweep-20260927T1552-n400: done
+[15:57:16] tearing down tier 1 (containers + volumes)
+{"ues": 400, "phase": "done", "bringup_s": 95.6, "ping_loss_pct": 0.0, "rtt_p50_ms": 0.6, "rtt_p99_ms": 11.2, "erro_lines": {"nrf": 0, "amf": 7, "ausf": 0, "udm": 0, "udr": 0, "pcf": 0, "nssf": 0, "smf": 0, "chf": 0, "upf": 0}}
+
+######## N = 800
+[15:57:23] run sweep-20260927T1552-n800: clean rebuild with 800 UEs
+[15:57:23]   gate ok   gtp5g loaded (0.0s)
+[15:57:23]   gate ok   storage tier reachable (0.02s)
+[15:57:23] stage 1: mongo + node agents + webconsole
+[15:57:25]   gate ok   mongo ping (1.16s)
+[15:57:27]   gate ok   webui api (1.21s)
+[15:57:27] stage 2: NRF
+[15:57:29]   gate ok   nrf SBI up (1.05s)
+[15:57:29] stage 3: UPF
+[15:57:29]   gate ok   upf started (0.02s)
+[15:57:29] stage 4: control-plane NFs
+[15:57:30]   gate ok   all NF types registered in NRF (0.08s)
+[15:57:30]   gate ok   smf<->upf PFCP association (0.02s)
+[15:57:30] stage 5: subscribers
+[15:57:36]   gate ok   800 subscribers provisioned
+[15:57:36] stage 6: gNB
+[15:57:36]   gate ok   gNB NG Setup (0.04s)
+[15:57:36] stage 7: 800 UEs
+[16:00:52]   gate ok   800 UEs registered + PDU sessions (3.85s)
+[16:00:52] READY  run=sweep-20260927T1552-n800  dir=../runs/sweep-20260927T1552-n800
+workload: 800 UEs, 150.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/sweep-20260927T1552-n800/workload
+pings: 3584  loss: 0.00%  rtt p50: 1.15 ms
+deregistration_switch_off            n=15   ok=15   aborted=0  t3580=0  p50=894 ms
+initial_registration                 n=15   ok=6    aborted=1  t3580=0  p50=298 ms
+pdu_session_establishment            n=26   ok=25   aborted=1  t3580=3  p50=834 ms
+pdu_session_establishment_initial    n=6    ok=6    aborted=0  t3580=0  p50=377 ms
+pdu_session_release                  n=26   ok=26   aborted=0  t3580=0  p50=259 ms
+[16:03:27] run sweep-20260927T1552-n800: done
+[16:03:30] tearing down tier 1 (containers + volumes)
+{"ues": 800, "phase": "done", "bringup_s": 209.3, "ping_loss_pct": 0.0, "rtt_p50_ms": 1.1, "rtt_p99_ms": 14.8, "erro_lines": {"nrf": 0, "amf": 4, "ausf": 0, "udm": 0, "udr": 0, "pcf": 0, "nssf": 0, "smf": 0, "chf": 0, "upf": 1}}
+
+######## N = 1200
+[16:03:36] run sweep-20260927T1552-n1200: clean rebuild with 1200 UEs
+[16:03:36]   gate ok   gtp5g loaded (0.0s)
+[16:03:36]   gate ok   storage tier reachable (0.02s)
+[16:03:36] stage 1: mongo + node agents + webconsole
+[16:03:39]   gate ok   mongo ping (1.2s)
+[16:03:41]   gate ok   webui api (1.21s)
+[16:03:41] stage 2: NRF
+[16:03:42]   gate ok   nrf SBI up (1.05s)
+[16:03:42] stage 3: UPF
+[16:03:43]   gate ok   upf started (0.02s)
+[16:03:43] stage 4: control-plane NFs
+[16:03:44]   gate ok   all NF types registered in NRF (0.08s)
+[16:03:44]   gate ok   smf<->upf PFCP association (0.03s)
+[16:03:44] stage 5: subscribers
+[16:03:53]   gate ok   1200 subscribers provisioned
+[16:03:53] stage 6: gNB
+[16:03:54]   gate ok   gNB NG Setup (0.03s)
+[16:03:54] stage 7: 1200 UEs

@@ -1,0 +1,9 @@
+[submodule "free5gc-src"]
+	path = free5gc-src
+	url = https://github.com/free5gc/free5gc.git
+[submodule "free5gc-otel/util-patched"]
+	path = free5gc-otel/util-patched
+	url = https://github.com/free5gc/util.git
+[submodule "infra/gtp5g/gtp5g"]
+	path = infra/gtp5g/gtp5g
+	url = https://github.com/free5gc/gtp5g.git

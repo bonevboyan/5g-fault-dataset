@@ -1,0 +1,130 @@
+# Node-local collector (tier 1). One agent per node gathers all three pull/push modalities and
+# forwards them to the storage tier at ${STORE_HOST}. Every record is stamped with run.id / run_id
+# so a run can be sliced back out of long-lived storage (the per-run join key alongside trace_id).
+receivers:
+  otlp:
+    protocols:
+      grpc: { endpoint: 0.0.0.0:4317 }
+      http: { endpoint: 0.0.0.0:4318 }
+
+  # Container stdout/stderr via Docker's json-file driver. bin/tb starts every service with
+  # log-opt labels=com.docker.compose.{project,service}, so each line carries its origin.
+  filelog/docker:
+    include: [/var/lib/docker/containers/*/*-json.log]
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: json_parser
+        timestamp:
+          parse_from: attributes.time
+          layout_type: gotime
+          layout: "2006-01-02T15:04:05.999999999Z07:00"
+      - type: move
+        from: attributes.log
+        to: body
+      - type: move
+        if: 'attributes.attrs != nil and attributes.attrs["com.docker.compose.service"] != nil'
+        from: attributes.attrs["com.docker.compose.service"]
+        to: resource["service.name"]
+      - type: move
+        if: 'attributes.attrs != nil and attributes.attrs["com.docker.compose.project"] != nil'
+        from: attributes.attrs["com.docker.compose.project"]
+        to: resource["compose.project"]
+      - type: move
+        from: attributes.stream
+        to: attributes["log.iostream"]
+      - type: remove
+        field: attributes.time
+      - type: remove
+        if: 'attributes.attrs != nil'
+        field: attributes.attrs
+
+  prometheus:
+    config:
+      global:
+        scrape_interval: 5s
+      scrape_configs:
+        - job_name: free5gc
+          static_configs:
+            - targets:
+                - nrf.free5gc.org:9091
+                - amf.free5gc.org:9091
+                - ausf.free5gc.org:9091
+                - udm.free5gc.org:9091
+                - udr.free5gc.org:9091
+                - pcf.free5gc.org:9091
+                - nssf.free5gc.org:9091
+                - smf.free5gc.org:9091
+                - chf.free5gc.org:9091
+          relabel_configs:
+            - source_labels: [__address__]
+              regex: '([a-z]+)\..*'
+              target_label: nf
+        - job_name: cadvisor
+          static_configs: [{ targets: ["cadvisor:8080"] }]
+          metric_relabel_configs:
+            # keep only this testbed's containers
+            - source_labels: [container_label_com_docker_compose_project]
+              regex: f5g
+              action: keep
+        - job_name: node
+          static_configs: [{ targets: ["node-exporter:9100"] }]
+        - job_name: otelcol
+          static_configs: [{ targets: ["localhost:8888"] }]
+
+processors:
+  batch: {}
+  resource/run:
+    attributes:
+      - { key: run.id, value: "${env:RUN_ID}", action: upsert }
+  filter/own-project:
+    error_mode: ignore
+    logs:
+      log_record:
+        - 'resource.attributes["compose.project"] != "f5g"'
+  # free5gc/openapi@v1.3.0 client.go:275 builds otelhttptrace.NewClientTrace(ctx) *before* the
+  # otelhttp client span exists, so its connection sub-spans (http.getconn/.send/.headers/...)
+  # form orphan trees rooted outside any SBI trace (~3 roots per SBI call). The whole
+  # otelhttptrace scope is therefore unlinked noise; drop it.
+  filter/orphan-httptrace:
+    error_mode: ignore
+    traces:
+      span:
+        - 'IsMatch(instrumentation_scope.name, "instrumentation/(net/http/)?httptrace(/otelhttptrace)?$")'
+  transform/strip-ansi:
+    error_mode: ignore
+    log_statements:
+      - context: log
+        statements:
+          - replace_pattern(body, "\\x1b\\[[0-9;]*m", "")
+          - replace_pattern(body, "\\n$", "")
+
+exporters:
+  otlp/tempo:
+    endpoint: ${env:STORE_HOST}:14317
+    tls: { insecure: true }
+  otlphttp/loki:
+    endpoint: http://${env:STORE_HOST}:3100/otlp
+  prometheusremotewrite:
+    endpoint: http://${env:STORE_HOST}:9090/api/v1/write
+    external_labels:
+      run_id: ${env:RUN_ID}
+    resource_to_telemetry_conversion: { enabled: false }
+
+service:
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8888
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [filter/orphan-httptrace, resource/run, batch]
+      exporters: [otlp/tempo]
+    logs:
+      receivers: [filelog/docker]
+      processors: [filter/own-project, transform/strip-ansi, resource/run, batch]
+      exporters: [otlphttp/loki]
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [prometheusremotewrite]

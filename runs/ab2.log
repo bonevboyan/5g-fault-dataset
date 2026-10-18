@@ -1,0 +1,12 @@
+[18:50:26] READY  run=ab2-on-1  dir=../runs/ab2-on-1  (TUN repairs: 0)
+pings: 3895  loss: 0.98%  rtt p50: 0.82 ms
+[18:54:05] run ab2-on-1: done
+[18:55:16] READY  run=ab2-off-1  dir=../runs/ab2-off-1  (TUN repairs: 0)
+pings: 3967  loss: 0.86%  rtt p50: 0.85 ms
+[18:58:54] run ab2-off-1: done
+[19:00:05] READY  run=ab2-off-2  dir=../runs/ab2-off-2  (TUN repairs: 0)
+pings: 3963  loss: 0.96%  rtt p50: 0.87 ms
+[19:03:51] run ab2-off-2: done
+[19:04:59] READY  run=ab2-on-2  dir=../runs/ab2-on-2  (TUN repairs: 0)
+pings: 3898  loss: 0.90%  rtt p50: 0.90 ms
+[19:08:37] run ab2-on-2: done

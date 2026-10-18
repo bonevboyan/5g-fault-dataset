@@ -1,0 +1,57 @@
+diff --git a/internal/sbi/processor/policyauthorization.go b/internal/sbi/processor/policyauthorization.go
+index 0f8ad41..c022ac1 100644
+--- a/internal/sbi/processor/policyauthorization.go
++++ b/internal/sbi/processor/policyauthorization.go
+@@ -2,6 +2,7 @@ package processor
+ 
+ import (
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"net/http"
+ 	"strings"
+ 	"time"
+@@ -441,7 +442,7 @@ func (p *Processor) postAppSessCtxProcedure(appSessCtx *models.Pcf_PolAuth_AppSe
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 	}
+ 	return appSessCtx, locationHeader, nil
+ }
+@@ -512,7 +513,7 @@ func (p *Processor) HandleDeleteAppSessionContext(
+ 		ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 		SmPolicyDecision: &deletedSmPolicyDec,
+ 	}
+-	go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++	f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 	logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	c.Status(http.StatusNoContent)
+ }
+@@ -846,7 +847,7 @@ func (p *Processor) HandleModAppSessionContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	c.JSON(http.StatusOK, appSessCtx)
+@@ -893,7 +894,7 @@ func (p *Processor) HandleDeleteEventsSubscContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	c.Status(http.StatusNoContent)
+@@ -1047,7 +1048,7 @@ func (p *Processor) HandleUpdateEventsSubscContext(
+ 			ResourceUri:      util.GetResourceUri(models.Nrf_NFMgmt_ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID),
+ 			SmPolicyDecision: smPolicy.PolicyDecision,
+ 		}
+-		go p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification)
++		f5gtrace.Go(func() { p.SendSMPolicyUpdateNotification(smPolicy.PolicyContext.NotificationUri, &notification) })
+ 		logger.PolicyAuthLog.Tracef("Send SM Policy[%s] Update Notification", smPolicyID)
+ 	}
+ 	if created {

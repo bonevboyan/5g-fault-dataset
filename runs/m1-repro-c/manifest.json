@@ -1,0 +1,1207 @@
+{
+  "run_id": "m1-repro-c",
+  "phase": "done",
+  "started_at": "2026-09-27T13:09:33.396+00:00",
+  "ues": 50,
+  "user_plane": true,
+  "store": "127.0.0.1",
+  "host": {
+    "kernel": "7.0.0-31-generic",
+    "cpus": 20,
+    "node": "boyan-bonev-Yoga-Slim-7-ProX-14IAH7"
+  },
+  "config_sha256": "de63b42d5d87b205fc0e88a3ff95c3747bf392ccb54c28a862bcd3366e826cde",
+  "gates": [
+    {
+      "gate": "gtp5g loaded",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "gate": "storage tier reachable",
+      "ok": true,
+      "seconds": 0.02
+    },
+    {
+      "gate": "mongo ping",
+      "ok": true,
+      "seconds": 1.17
+    },
+    {
+      "gate": "webui api",
+      "ok": true,
+      "seconds": 1.19
+    },
+    {
+      "gate": "nrf SBI up",
+      "ok": true,
+      "seconds": 1.07
+    },
+    {
+      "gate": "upf started",
+      "ok": true,
+      "seconds": 0.04
+    },
+    {
+      "gate": "all NF types registered in NRF",
+      "ok": true,
+      "seconds": 0.07
+    },
+    {
+      "gate": "smf<->upf PFCP association",
+      "ok": true,
+      "seconds": 0.02
+    },
+    {
+      "gate": "50 subscribers provisioned",
+      "ok": true
+    },
+    {
+      "gate": "gNB NG Setup",
+      "ok": true,
+      "seconds": 0.03
+    },
+    {
+      "gate": "50 UEs registered + PDU sessions",
+      "ok": true,
+      "seconds": 1.07
+    }
+  ],
+  "ue_states": {
+    "imsi-208930000000001": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.1"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.1"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000002": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.2"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.2"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000003": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.3"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.3"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000004": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.4"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.4"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000005": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.5"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.5"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000006": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.7"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.7"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000007": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.6"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.6"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000008": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.8"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.8"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000009": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.10"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.9"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000010": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.9"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.10"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000011": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.11"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.11"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000012": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.12"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.12"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000013": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.13"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.13"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000014": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.14"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.14"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000015": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.15"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.15"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000016": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.16"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.16"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000017": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.17"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.17"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000018": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.18"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.18"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000019": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.19"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.19"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000020": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.20"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.20"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000021": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.22"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.22"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000022": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.21"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.21"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000023": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.23"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.23"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000024": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.24"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.24"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000025": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.33"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.33"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000026": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.25"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.25"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000027": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.26"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.26"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000028": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.27"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.27"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000029": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.28"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.28"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000030": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.29"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.29"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000031": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.30"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.30"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000032": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.31"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.31"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000033": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.32"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.32"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000034": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.34"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.34"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000035": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.35"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.35"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000036": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.36"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.36"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000037": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.37"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.37"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000038": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.38"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.38"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000039": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.39"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.39"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000040": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.40"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.40"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000041": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.41"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.41"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000042": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.42"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.42"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000043": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.43"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.43"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000044": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.44"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.44"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000045": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.45"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.45"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000046": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.46"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.46"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000047": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.47"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.48"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000048": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.48"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.47"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000049": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.49"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.49"
+        }
+      ],
+      "pdu_sessions": 2
+    },
+    "imsi-208930000000050": {
+      "rm": "RM-REGISTERED",
+      "mm": "MM-REGISTERED/NORMAL-SERVICE",
+      "sessions": [
+        {
+          "id": 1,
+          "state": "PS-ACTIVE",
+          "sd": "010203",
+          "address": "10.60.0.50"
+        },
+        {
+          "id": 2,
+          "state": "PS-ACTIVE",
+          "sd": "112233",
+          "address": "10.61.0.50"
+        }
+      ],
+      "pdu_sessions": 2
+    }
+  },
+  "ready_at": "2026-09-27T13:09:58.541+00:00",
+  "images": {
+    "free5gc/amf:otel": "sha256:86b8a91b4dafe89964aacc46de68ec572a0febeade45246c72914f75366aeae5",
+    "free5gc/ausf:otel": "sha256:9f92eda9480ef9e8e69fd8c302f3d06164849517b97fb7d5ff8fe7a13d5d4b78",
+    "free5gc/chf:otel": "sha256:494f7feb9b3724e19a763d83219e3a852a02282e6e98b29dab6d5add94f851b1",
+    "free5gc/nrf:otel": "sha256:d2a4a09b230f984905e4e1eb94cd52bf9ed08e9a836108c0d0964ac8ecf335c2",
+    "free5gc/nssf:otel": "sha256:983e438686e17dd72ef04ab20d4b86d9c53e65218c91fc0a8e109914ee927661",
+    "free5gc/pcf:otel": "sha256:96a700ac3c4a634364ba2828c6a7212130601ff2e18de2b88a2a26adfed2c28a",
+    "free5gc/smf:otel": "sha256:26b90e8eda3a58d2b9571f00450fc34097b48f87d2d8f1be9c037fcaf712f0ab",
+    "free5gc/udm:otel": "sha256:60b60edd5668a2c72d64f32ab397eaafad575275358b47db461aa8b6c07552a6",
+    "free5gc/udr:otel": "sha256:9de0bc6bbb339a5e53ac10ec27df5750f97cc6938b829c354d3554c4d7ac2ad8",
+    "free5gc/ueransim:latest": "sha256:a714e44f771724100e00a2fcb3b779b4eee7cfabbce087f64c99668607941f42",
+    "free5gc/upf:v4.2.3": "sha256:b1c4e6967db6e244b43c0cbe5bba498d3a55e506c580134ca131f5ee6df99c75",
+    "free5gc/webui:v4.2.3": "sha256:194617a98871208f0b77a71c9a4ccda7824ab10e8cb7a979798eb1e81271a705",
+    "gcr.io/cadvisor/cadvisor:v0.49.1": "sha256:c02cf39d3dba9fcf5531f23358e33377e50fcc6065d97a27e68a4242229c67a0",
+    "mongo:4.4": "sha256:0010f63d26952bd3960fac5513c64a1cf7d6299f31fa7b54ac1b36633ee04333",
+    "otel/opentelemetry-collector-contrib:0.120.0": "sha256:c67f607546f4563c31a04f5c3a2b964678c8bf8069abb42f8206316c97e09005",
+    "prom/node-exporter:v1.8.2": "sha256:71dc9668b154bd072420bf69f59140ceeac04b88cf300bfa24053eb02a04f169"
+  },
+  "containers": {
+    "ueransim": {
+      "id": "ec78860f50ac",
+      "service": "ueransim",
+      "ip": "10.100.200.17"
+    },
+    "nssf": {
+      "id": "f8610c886653",
+      "service": "free5gc-nssf",
+      "ip": "10.100.200.13"
+    },
+    "ausf": {
+      "id": "d709ebd2855f",
+      "service": "free5gc-ausf",
+      "ip": "10.100.200.10"
+    },
+    "chf": {
+      "id": "004522ce5cdf",
+      "service": "free5gc-chf",
+      "ip": "10.100.200.14"
+    },
+    "amf": {
+      "id": "c39d38a11bd5",
+      "service": "free5gc-amf",
+      "ip": "10.100.200.16"
+    },
+    "udm": {
+      "id": "3649e3366fcc",
+      "service": "free5gc-udm",
+      "ip": "10.100.200.12"
+    },
+    "smf": {
+      "id": "b35e513d3eef",
+      "service": "free5gc-smf",
+      "ip": "10.100.200.11"
+    },
+    "pcf": {
+      "id": "781f92127791",
+      "service": "free5gc-pcf",
+      "ip": "10.100.200.15"
+    },
+    "udr": {
+      "id": "162f33fc3443",
+      "service": "free5gc-udr",
+      "ip": "10.100.200.9"
+    },
+    "upf": {
+      "id": "8ce9ac265877",
+      "service": "free5gc-upf",
+      "ip": "10.100.200.8"
+    },
+    "nrf": {
+      "id": "fe9863e3cde9",
+      "service": "free5gc-nrf",
+      "ip": "10.100.200.7"
+    },
+    "webui": {
+      "id": "028ed15852a9",
+      "service": "free5gc-webui",
+      "ip": "10.100.200.6"
+    },
+    "mongodb": {
+      "id": "7c19f9cf6cc6",
+      "service": "db",
+      "ip": "10.100.200.4"
+    },
+    "otel-collector": {
+      "id": "0b59f1135169",
+      "service": "otel-collector",
+      "ip": "10.100.200.2"
+    },
+    "cadvisor": {
+      "id": "47b4265b6090",
+      "service": "cadvisor",
+      "ip": "10.100.200.3"
+    },
+    "node-exporter": {
+      "id": "f47ece143248",
+      "service": "node-exporter",
+      "ip": "10.100.200.5"
+    }
+  },
+  "workload_started_at": "2026-09-27T13:09:59.131+00:00",
+  "workload_ended_at": "2026-09-27T13:12:59.284+00:00",
+  "containers_at_end": {
+    "ueransim": {
+      "id": "ec78860f50ac",
+      "service": "ueransim",
+      "ip": "10.100.200.17"
+    },
+    "nssf": {
+      "id": "f8610c886653",
+      "service": "free5gc-nssf",
+      "ip": "10.100.200.13"
+    },
+    "ausf": {
+      "id": "d709ebd2855f",
+      "service": "free5gc-ausf",
+      "ip": "10.100.200.10"
+    },
+    "chf": {
+      "id": "004522ce5cdf",
+      "service": "free5gc-chf",
+      "ip": "10.100.200.14"
+    },
+    "amf": {
+      "id": "c39d38a11bd5",
+      "service": "free5gc-amf",
+      "ip": "10.100.200.16"
+    },
+    "udm": {
+      "id": "3649e3366fcc",
+      "service": "free5gc-udm",
+      "ip": "10.100.200.12"
+    },
+    "smf": {
+      "id": "b35e513d3eef",
+      "service": "free5gc-smf",
+      "ip": "10.100.200.11"
+    },
+    "pcf": {
+      "id": "781f92127791",
+      "service": "free5gc-pcf",
+      "ip": "10.100.200.15"
+    },
+    "udr": {
+      "id": "162f33fc3443",
+      "service": "free5gc-udr",
+      "ip": "10.100.200.9"
+    },
+    "upf": {
+      "id": "8ce9ac265877",
+      "service": "free5gc-upf",
+      "ip": "10.100.200.8"
+    },
+    "nrf": {
+      "id": "fe9863e3cde9",
+      "service": "free5gc-nrf",
+      "ip": "10.100.200.7"
+    },
+    "webui": {
+      "id": "028ed15852a9",
+      "service": "free5gc-webui",
+      "ip": "10.100.200.6"
+    },
+    "mongodb": {
+      "id": "7c19f9cf6cc6",
+      "service": "db",
+      "ip": "10.100.200.4"
+    },
+    "otel-collector": {
+      "id": "0b59f1135169",
+      "service": "otel-collector",
+      "ip": "10.100.200.2"
+    },
+    "cadvisor": {
+      "id": "47b4265b6090",
+      "service": "cadvisor",
+      "ip": "10.100.200.3"
+    },
+    "node-exporter": {
+      "id": "f47ece143248",
+      "service": "node-exporter",
+      "ip": "10.100.200.5"
+    }
+  }
+}

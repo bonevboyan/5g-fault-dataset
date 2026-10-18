@@ -1,0 +1,38 @@
+diff --git a/internal/sbi/processor/callback.go b/internal/sbi/processor/callback.go
+index 873792d..d447b55 100644
+--- a/internal/sbi/processor/callback.go
++++ b/internal/sbi/processor/callback.go
+@@ -3,6 +3,7 @@ package processor
+ import (
+ 	"context"
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"runtime/debug"
+ 
+ 	"github.com/free5gc/openapi/models"
+@@ -57,7 +58,7 @@ func PreHandleOnDataChangeNotify(ueId string, resourceId string, patchItems []mo
+ 
+ 	notifyItems = append(notifyItems, notifyItem)
+ 
+-	go SendOnDataChangeNotify(ueId, notifyItems)
++	f5gtrace.Go(func() { SendOnDataChangeNotify(ueId, notifyItems) })
+ }
+ 
+ func PreHandlePolicyDataChangeNotification(ueId string, dataId string, value interface{}) {
+@@ -87,14 +88,14 @@ func PreHandlePolicyDataChangeNotification(ueId string, dataId string, value int
+ 		return
+ 	}
+ 
+-	go SendPolicyDataChangeNotification(policyDataChangeNotification)
++	f5gtrace.Go(func() { SendPolicyDataChangeNotification(policyDataChangeNotification) })
+ }
+ 
+ func PreHandleInfluenceDataUpdateNotification(influenceId string, original, modified *models.Udr_DR_TrafficInfluData) {
+ 	resUri := fmt.Sprintf("%s/application-data/influenceData/%s",
+ 		udr_context.GetSelf().GetIPv4GroupUri(udr_context.NUDR_DR), influenceId)
+ 
+-	go SendInfluenceDataUpdateNotification(resUri, original, modified)
++	f5gtrace.Go(func() { SendInfluenceDataUpdateNotification(resUri, original, modified) })
+ }
+ 
+ func SendOnDataChangeNotify(ueId string, notifyItems []models.NotifyItem) {

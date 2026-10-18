@@ -1,0 +1,38 @@
+# k3d multi-node cluster for the 5G fault dataset (M0 de-risk stage).
+# NOTE: logical multi-node — all nodes share this host's kernel/CPU/RAM.
+# It gives real k8s node objects, per-node kubelet/cAdvisor, and working
+# nodeSelectors/taints (enough to prove the tracing story and to pin the
+# observability tier away from the core). True off-host isolation comes later
+# with VM-based nodes; the manifests won't need to change.
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: fault5g
+servers: 1        # control-plane
+agents: 2         # agent-0 = observability, agent-1 = 5G workload
+image: rancher/k3s:v1.31.5-k3s1
+options:
+  k3d:
+    wait: true
+    timeout: "300s"
+  k3s:
+    nodeLabels:
+      - label: role=observability      # Prometheus/Loki/Tempo/Grafana/OTel land here
+        nodeFilters:
+          - agent:0
+      - label: role=workload           # free5GC NFs + UERANSIM land here
+        nodeFilters:
+          - agent:1
+    extraArgs:
+      # keep the ingress/LB noise out of the metrics; we use port-forward / NodePort
+      - arg: --disable=traefik
+        nodeFilters:
+          - server:*
+volumes:
+  # free5GC UPF (gtp5g) and UERANSIM need host kernel + tun; expose them to pods.
+  - volume: /dev/net/tun:/dev/net/tun
+    nodeFilters:
+      - agent:1
+  - volume: /lib/modules:/lib/modules:ro
+    nodeFilters:
+      - all

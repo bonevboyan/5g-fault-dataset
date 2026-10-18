@@ -1,0 +1,49 @@
+diff --git a/internal/context/user_plane_information.go b/internal/context/user_plane_information.go
+index d93cecd..3da8abe 100644
+--- a/internal/context/user_plane_information.go
++++ b/internal/context/user_plane_information.go
+@@ -26,6 +26,10 @@ type UserPlaneInformation struct {
+ 	UPFsIPtoID                map[string]string               // ip->id table, for speed optimization
+ 	DefaultUserPlanePath      map[string][]*UPNode            // DNN to Default Path
+ 	DefaultUserPlanePathToUPF map[string]map[string][]*UPNode // DNN and UPF to Default Path
++	// [f5g patch] guards the two default-path caches above. Concurrent PDU session creations
++	// wrote DefaultUserPlanePathToUPF unsynchronised ("fatal error: concurrent map writes" in
++	// GenerateDefaultPathToUPF), crashing the SMF and losing every SM context.
++	pathCacheMu sync.Mutex
+ }
+ 
+ type UPNodeType string
+@@ -561,6 +565,7 @@ func (upi *UserPlaneInformation) UpNodeDelete(upNodeName string) {
+ 				logger.InitLog.Tracef("Delete UPF [%s] from upi.UPFs.\n", upNodeName)
+ 				delete(upi.UPFs, upNodeName)
+ 			}
++			upi.pathCacheMu.Lock()
+ 			for selectionStr, destMap := range upi.DefaultUserPlanePathToUPF {
+ 				for destIp, path := range destMap {
+ 					if nodeInPath(upNode, path) != -1 {
+@@ -569,6 +574,7 @@ func (upi *UserPlaneInformation) UpNodeDelete(upNodeName string) {
+ 					}
+ 				}
+ 			}
++			upi.pathCacheMu.Unlock()
+ 		}
+ 		if upNode.Type == UPNODE_AN {
+ 			logger.InitLog.Tracef("Delete AN [%s] from upi.AccessNetwork.\n", upNodeName)
+@@ -628,6 +634,8 @@ func (upi *UserPlaneInformation) GetUPFIDByIP(ip string) string {
+ }
+ 
+ func (upi *UserPlaneInformation) GetDefaultUserPlanePathByDNN(selection *UPFSelectionParams) (path UPPath) {
++	upi.pathCacheMu.Lock()
++	defer upi.pathCacheMu.Unlock()
+ 	path, pathExist := upi.DefaultUserPlanePath[selection.String()]
+ 	logger.CtxLog.Traceln("In GetDefaultUserPlanePathByDNN")
+ 	logger.CtxLog.Traceln("selection: ", selection.String())
+@@ -646,6 +654,8 @@ func (upi *UserPlaneInformation) GetDefaultUserPlanePathByDNNAndUPF(selection *U
+ 	upf *UPNode,
+ ) (path UPPath) {
+ 	nodeID := upf.NodeID.ResolveNodeIdToIp().String()
++	upi.pathCacheMu.Lock()
++	defer upi.pathCacheMu.Unlock()
+ 
+ 	if upi.DefaultUserPlanePathToUPF[selection.String()] != nil {
+ 		path, pathExist := upi.DefaultUserPlanePathToUPF[selection.String()][nodeID]

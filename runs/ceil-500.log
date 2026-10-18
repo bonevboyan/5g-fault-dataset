@@ -1,0 +1,18 @@
+[17:03:53] run ceil-500: clean rebuild with 500 UEs
+[17:03:53]   gate ok   gtp5g loaded (0.0s)
+[17:03:53]   gate ok   storage tier reachable (0.02s)
+[17:03:53] stage 1: mongo + node agents + webconsole
+[17:03:56]   gate ok   mongo ping (1.17s)
+[17:03:58]   gate ok   webui api (1.19s)
+[17:03:58] stage 2: NRF
+[17:03:59]   gate ok   nrf SBI up (1.07s)
+[17:03:59] stage 3: UPF
+[17:04:00]   gate ok   upf started (0.02s)
+[17:04:00] stage 4: control-plane NFs
+[17:04:01]   gate ok   all NF types registered in NRF (0.08s)
+[17:04:01]   gate ok   smf<->upf PFCP association (0.02s)
+[17:04:01] stage 5: subscribers
+[17:04:04]   gate ok   500 subscribers provisioned
+[17:04:04] stage 6: gNB
+[17:04:05]   gate ok   gNB NG Setup (0.03s)
+[17:04:05] stage 7: 500 UEs

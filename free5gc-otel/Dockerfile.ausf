@@ -1,0 +1,2 @@
+FROM free5gc/ausf:v4.2.3
+COPY bin/ausf /free5gc/ausf

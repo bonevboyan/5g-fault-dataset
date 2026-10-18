@@ -1,0 +1,58 @@
+# Per-node agent (DaemonSet): container logs of the testbed namespaces + this node's kubelet
+# cAdvisor metrics. Pushes straight to the storage tier; every record carries run.id.
+receivers:
+  filelog:
+    include: [/var/log/pods/f5g_*/*/*.log, /var/log/pods/f5g-telemetry_*/*/*.log]
+    start_at: end
+    include_file_path: true
+    operators:
+      - type: container          # CRI format; adds k8s.namespace/pod/container from the path
+        add_metadata_from_filepath: true
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: cadvisor
+          scrape_interval: 5s
+          scheme: https
+          tls_config: { insecure_skip_verify: true }
+          authorization: { credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token }
+          metrics_path: /metrics/cadvisor
+          static_configs: [{ targets: ["${env:NODE_IP}:10250"] }]
+          metric_relabel_configs:
+            - { source_labels: [namespace], regex: "f5g.*", action: keep }
+          relabel_configs:
+            - { target_label: node, replacement: "${env:NODE_NAME}" }
+
+processors:
+  batch: {}
+  resource/run:
+    attributes:
+      - { key: run.id, value: "${env:RUN_ID}", action: upsert }
+      - { key: k8s.node.name, value: "${env:NODE_NAME}", action: upsert }
+  transform/logs:
+    error_mode: ignore
+    log_statements:
+      - context: resource
+        statements:
+          - set(attributes["service.name"], attributes["k8s.container.name"])
+      - context: log
+        statements:
+          - replace_pattern(body, "\\x1b\\[[0-9;]*m", "")
+
+exporters:
+  otlphttp/loki:
+    endpoint: http://${env:STORE_HOST}:3100/otlp
+  prometheusremotewrite:
+    endpoint: http://${env:STORE_HOST}:9090/api/v1/write
+    external_labels: { run_id: "${env:RUN_ID}" }
+
+service:
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [transform/logs, resource/run, batch]
+      exporters: [otlphttp/loki]
+    metrics:
+      receivers: [prometheus]
+      processors: [batch]
+      exporters: [prometheusremotewrite]

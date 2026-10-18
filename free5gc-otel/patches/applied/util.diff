@@ -1,0 +1,137 @@
+diff --git a/go.mod b/go.mod
+index d3e35cb..550b269 100644
+--- a/go.mod
++++ b/go.mod
+@@ -4,6 +4,7 @@ go 1.26.2
+ 
+ require (
+ 	github.com/evanphx/json-patch/v5 v5.9.0
++	github.com/free5gc/f5gtrace v0.0.0
+ 	github.com/free5gc/nas v1.2.4-0.20260707083822-348faf940c55
+ 	github.com/free5gc/ngap v1.1.4-0.20260707055048-c26215fe47ef
+ 	github.com/gin-gonic/gin v1.10.0
+@@ -17,6 +18,7 @@ require (
+ 	github.com/stretchr/testify v1.10.0
+ 	github.com/tim-ywliu/nested-logrus-formatter v1.3.2
+ 	go.mongodb.org/mongo-driver v1.17.1
++	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0
+ 	golang.org/x/net v0.47.0
+ )
+ 
+@@ -29,8 +31,11 @@ require (
+ 	github.com/cloudwego/base64x v0.1.4 // indirect
+ 	github.com/cloudwego/iasm v0.2.0 // indirect
+ 	github.com/davecgh/go-spew v1.1.1 // indirect
++	github.com/felixge/httpsnoop v1.0.4 // indirect
+ 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
+ 	github.com/gin-contrib/sse v0.1.0 // indirect
++	github.com/go-logr/logr v1.4.1 // indirect
++	github.com/go-logr/stdr v1.2.2 // indirect
+ 	github.com/go-playground/locales v0.14.1 // indirect
+ 	github.com/go-playground/universal-translator v0.18.1 // indirect
+ 	github.com/go-playground/validator/v10 v10.20.0 // indirect
+@@ -59,6 +64,9 @@ require (
+ 	github.com/xdg-go/scram v1.1.2 // indirect
+ 	github.com/xdg-go/stringprep v1.0.4 // indirect
+ 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
++	go.opentelemetry.io/otel v1.24.0 // indirect
++	go.opentelemetry.io/otel/metric v1.24.0 // indirect
++	go.opentelemetry.io/otel/trace v1.24.0 // indirect
+ 	golang.org/x/arch v0.8.0 // indirect
+ 	golang.org/x/crypto v0.45.0 // indirect
+ 	golang.org/x/sync v0.18.0 // indirect
+@@ -67,3 +75,5 @@ require (
+ 	google.golang.org/protobuf v1.36.1 // indirect
+ 	gopkg.in/yaml.v3 v3.0.1 // indirect
+ )
++
++replace github.com/free5gc/f5gtrace => ../f5gtrace
+diff --git a/go.sum b/go.sum
+index c318977..d29b242 100644
+--- a/go.sum
++++ b/go.sum
+@@ -18,6 +18,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
+ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+ github.com/evanphx/json-patch/v5 v5.9.0 h1:kcBlZQbplgElYIlo/n1hJbls2z/1awpXxpRi0/FOJfg=
+ github.com/evanphx/json-patch/v5 v5.9.0/go.mod h1:VNkHZ/282BpEyt/tObQO8s5CMPmYYq14uClGH4abBuQ=
++github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
++github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
+ github.com/free5gc/nas v1.2.4-0.20260707083822-348faf940c55 h1:II2TnEwOTj6z+Iiq+iq5F4puxtaX1fvASytwxyg/68s=
+ github.com/free5gc/nas v1.2.4-0.20260707083822-348faf940c55/go.mod h1:T/krdGjxSut+MQJAFFBS4lsWZa/NPEz7wO0G/D3qHeE=
+ github.com/free5gc/ngap v1.1.4-0.20260707055048-c26215fe47ef h1:+TrPHbLcROsjDUuwsMBQTAi7SeKMP2o0v7xjsTJEJ8s=
+@@ -28,6 +30,11 @@ github.com/gin-contrib/sse v0.1.0 h1:Y/yl/+YNO8GZSjAhjMsSuLt29uWRFHdHYUb5lYOV9qE
+ github.com/gin-contrib/sse v0.1.0/go.mod h1:RHrZQHXnP2xjPF+u1gW/2HnVO7nvIa9PG3Gm+fLHvGI=
+ github.com/gin-gonic/gin v1.10.0 h1:nTuyha1TYqgedzytsKYqna+DfLos46nTv2ygFy86HFU=
+ github.com/gin-gonic/gin v1.10.0/go.mod h1:4PMNQiOhvDRa013RKVbsiNwoyezlm2rm0uX/T7kzp5Y=
++github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
++github.com/go-logr/logr v1.4.1 h1:pKouT5E8xu9zeFC39JXRDukb6JFQPXM5p5I91188VAQ=
++github.com/go-logr/logr v1.4.1/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
++github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=
++github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre4VKE=
+ github.com/go-playground/assert/v2 v2.2.0 h1:JvknZsQTYeFEAhQwI4qEt9cyV5ONwRHC+lYKSsYSR8s=
+ github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
+ github.com/go-playground/locales v0.14.1 h1:EWaQ/wswjilfKLTECiXz7Rh+3BjFhfDFKv/oXslEjJA=
+@@ -130,6 +137,14 @@ github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78/go.mod h1:aL8wCCfTfS
+ github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
+ go.mongodb.org/mongo-driver v1.17.1 h1:Wic5cJIwJgSpBhe3lx3+/RybR5PiYRMpVFgO7cOHyIM=
+ go.mongodb.org/mongo-driver v1.17.1/go.mod h1:wwWm/+BuOddhcq3n68LKRmgk2wXzmF6s0SFOa0GINL4=
++go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0 h1:jq9TW8u3so/bN+JPT166wjOI6/vQPF6Xe7nMNIltagk=
++go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.49.0/go.mod h1:p8pYQP+m5XfbZm9fxtSKAbM6oIllS7s2AfxrChvc7iw=
++go.opentelemetry.io/otel v1.24.0 h1:0LAOdjNmQeSTzGBzduGe/rU4tZhMwL5rWgtp9Ku5Jfo=
++go.opentelemetry.io/otel v1.24.0/go.mod h1:W7b9Ozg4nkF5tWI5zsXkaKKDjdVjpD4oAt9Qi/MArHo=
++go.opentelemetry.io/otel/metric v1.24.0 h1:6EhoGWWK28x1fbpA4tYTOWBkPefTDQnb8WSGXlc88kI=
++go.opentelemetry.io/otel/metric v1.24.0/go.mod h1:VYhLe1rFfxuTXLgj4CBiyz+9WYBA8pNGJgDcSFRKBco=
++go.opentelemetry.io/otel/trace v1.24.0 h1:CsKnnL4dUAr/0llH9FKuc698G04IrpWV0MQA/Y1YELI=
++go.opentelemetry.io/otel/trace v1.24.0/go.mod h1:HPc3Xr/cOApsBI154IU0OI0HJexz+aw5uPdbs3UCjNU=
+ golang.org/x/arch v0.0.0-20210923205945-b76863e36670/go.mod h1:5om86z9Hs0C8fWVUuoMHwpExlXzs5Tkyp9hOrfG7pp8=
+ golang.org/x/arch v0.8.0 h1:3wRIsP3pM4yUptoR96otTUOXI367OS0+c9eeRi9doIc=
+ golang.org/x/arch v0.8.0/go.mod h1:FEVrYAQjsQXMVJ1nsMoVVXPZg6p2JE2mx8psSWTDQys=
+diff --git a/httpwrapper/httpwrapper.go b/httpwrapper/httpwrapper.go
+index a841cf3..5b1abe2 100644
+--- a/httpwrapper/httpwrapper.go
++++ b/httpwrapper/httpwrapper.go
+@@ -9,6 +9,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/pkg/errors"
++	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+ 	"golang.org/x/net/http2"
+ 	"golang.org/x/net/http2/h2c"
+ )
+@@ -59,7 +60,10 @@ func NewHttp2Server(bindAddr string, preMasterSecretLogPath string, handler http
+ 	}
+ 	server := &http.Server{
+ 		Addr:    bindAddr,
+-		Handler: h2c.NewHandler(handler, h2Server),
++		// [f5g patch] trace SBI requests but not the metrics endpoint (it shares this server
++		// constructor): probes and Prometheus scrapes would otherwise each start a trace
++		Handler: h2c.NewHandler(otelhttp.NewHandler(handler, "sbi",
++			otelhttp.WithFilter(func(r *http.Request) bool { return r.URL.Path != "/metrics" })), h2Server),
+ 	}
+ 
+ 	if preMasterSecretLogPath != "" {
+diff --git a/logger/logger.go b/logger/logger.go
+index 624baf5..4edab04 100644
+--- a/logger/logger.go
++++ b/logger/logger.go
+@@ -2,6 +2,7 @@ package logger
+ 
+ import (
+ 	"fmt"
++	"github.com/free5gc/f5gtrace"
+ 	"net"
+ 	"net/http"
+ 	"net/http/httputil"
+@@ -241,6 +242,12 @@ func renameOldLogFile(file string) error {
+ // NewGinWithLogrus - returns an Engine instance with the ginToLogrus and Recovery middleware already attached.
+ func NewGinWithLogrus(log *logrus.Entry, middleware ...gin.HandlerFunc) *gin.Engine {
+ 	engine := gin.New()
++	// [f5g patch] make the request context (which carries the otelhttp server span) the trace
++	// parent of every SBI call made while handling this request; see f5gtrace.
++	engine.Use(func(c *gin.Context) {
++		defer f5gtrace.Set(c.Request.Context())()
++		c.Next()
++	})
+ 	engine.Use(middleware...) // middleware handles should be added before handles ginToLogrus and ginRecover
+ 	engine.Use(ginToLogrus(log), ginRecover(log))
+ 	return engine

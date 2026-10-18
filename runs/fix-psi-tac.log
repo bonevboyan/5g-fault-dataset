@@ -1,0 +1,36 @@
+[12:18:01] run fix-psi-tac: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[12:18:01]   gate ok   gtp5g loaded (0.0s)
+[12:18:01]   gate ok   storage tier reachable (0.02s)
+[12:18:01]   gate ok   cluster roles Ready (0.03s)
+[12:18:01] importing free5gc/amf:otel2 -> agent-0 (stale)
+[12:18:04] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[12:18:06]   gate ok   otel-gateway Ready (2.08s)
+[12:18:12]   gate ok   logs + metrics reach storage (6.03s)
+[12:18:12] stage 1: mongo
+[12:18:14]   gate ok   mongo Ready (2.1s)
+[12:18:14] stage 2: NRF
+[12:18:15]   gate ok   nrf SBI up (https) (1.11s)
+[12:18:15] stage 3: UPF
+[12:18:21]   gate ok   upf started (5.33s)
+[12:18:21] stage 4: control-plane NFs + webconsole (AF)
+[12:18:24]   gate ok   all NF types registered in NRF (2.24s)
+[12:18:24]   gate ok   smf<->upf PFCP association (0.04s)
+[12:18:24]   gate ok   amf Ready (0.03s)
+[12:18:24]   gate ok   ausf Ready (0.03s)
+[12:18:24]   gate ok   udm Ready (0.04s)
+[12:18:24]   gate ok   udr Ready (0.03s)
+[12:18:24]   gate ok   pcf Ready (0.04s)
+[12:18:24]   gate ok   nssf Ready (0.03s)
+[12:18:24]   gate ok   smf Ready (0.04s)
+[12:18:25]   gate ok   chf Ready (1.09s)
+[12:18:25]   gate ok   webui Ready (0.04s)
+[12:18:34]   gate ok   traces reach storage (9.02s)
+[12:18:34] stage 5: 150 subscribers
+[12:18:36]   gate ok   webui port-forward (1.21s)
+[12:18:37]   gate ok   150 subscribers provisioned
+[12:18:37] stage 6: 3 gNBs
+[12:18:38]   gate ok   gnb-0 NG Setup (1.1s)
+[12:18:38]   gate ok   gnb-1 NG Setup (0.04s)
+[12:18:40]   gate ok   gnb-2 NG Setup (1.1s)
+[12:18:40] stage 7: 150 UEs
+[12:23:28] FAILED 150 UEs registered + PDU sessions with TUN not satisfied within 270s (last: 150/150 UEs registered, 0/300 PDU sessions, 0/300 with a TUN data path)

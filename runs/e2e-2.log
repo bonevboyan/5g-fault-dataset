@@ -1,0 +1,69 @@
+[15:45:02] run e2e-2: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[15:45:02]   gate ok   gtp5g loaded (0.0s)
+[15:45:02]   gate ok   storage tier reachable (0.08s)
+[15:45:02]   gate ok   cluster roles Ready (0.19s)
+[15:45:02] importing free5gc/nrf:otel2 -> agent-0 (stale)
+[15:45:05] importing free5gc/amf:otel2 -> agent-0 (stale)
+[15:45:07] importing free5gc/ausf:otel2 -> agent-0 (stale)
+[15:45:10] importing free5gc/udm:otel2 -> agent-0 (stale)
+[15:45:12] importing free5gc/udr:otel2 -> agent-0 (stale)
+[15:45:14] importing free5gc/pcf:otel2 -> agent-0 (stale)
+[15:45:16] importing free5gc/nssf:otel2 -> agent-0 (stale)
+[15:45:19] importing free5gc/smf:otel2 -> agent-0 (stale)
+[15:45:21] importing free5gc/chf:otel2 -> agent-0 (stale)
+[15:45:25] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[15:45:29]   gate ok   otel-gateway Ready (2.26s)
+[15:45:35]   gate ok   logs + metrics reach storage (6.06s)
+[15:45:35] stage 1: mongo
+[15:45:37]   gate ok   mongo Ready (2.25s)
+[15:45:37] stage 2: NRF
+[15:45:40]   gate ok   nrf SBI up (https) (2.46s)
+[15:45:40] stage 3: UPF
+[15:45:47]   gate ok   upf started (6.93s)
+[15:45:47] stage 4: control-plane NFs + webconsole (AF)
+[15:45:52]   gate ok   all NF types registered in NRF (2.57s)
+[15:45:52]   gate ok   smf<->upf PFCP association (0.14s)
+[15:45:53]   gate ok   amf Ready (0.12s)
+[15:45:53]   gate ok   ausf Ready (0.1s)
+[15:45:53]   gate ok   udm Ready (0.12s)
+[15:45:53]   gate ok   udr Ready (0.11s)
+[15:45:54]   gate ok   pcf Ready (1.24s)
+[15:45:54]   gate ok   nssf Ready (0.11s)
+[15:45:54]   gate ok   smf Ready (0.1s)
+[15:45:54]   gate ok   chf Ready (0.11s)
+[15:45:55]   gate ok   webui Ready (0.11s)
+[15:45:55]   gate ok   traces reach storage (0.01s)
+[15:45:55] stage 5: 150 subscribers
+[15:45:56]   gate ok   webui port-forward (1.44s)
+[15:45:59]   gate ok   150 subscribers provisioned
+[15:45:59] stage 6: 3 gNBs
+[15:46:01]   gate ok   gnb-0 NG Setup (1.29s)
+[15:46:02]   gate ok   gnb-1 NG Setup (0.16s)
+[15:46:02]   gate ok   gnb-2 NG Setup (0.12s)
+[15:46:02] stage 7: 150 UEs
+[15:46:32]   gate ok   150 UEs registered + PDU sessions with TUN (3.53s)
+[15:46:32]   gate ok   no pod restarts during bring-up (0.15s)
+[15:46:32] READY  run=e2e-2  dir=../runs/e2e-2  (TUN repairs: 0)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/e2e-2/workload
+pings: 3592  loss: 1.67%  rtt p50: 0.95 ms   (+50 first-after-wake probes, 33 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=2
+an_release                           n=41   ok=29   aborted=1  t3580=0  p50=1221 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=1128 ms
+initial_registration                 n=18   ok=11   aborted=2  t3580=0  p50=628 ms
+pdu_session_establishment            n=17   ok=13   aborted=0  t3580=0  p50=733 ms
+pdu_session_establishment_initial    n=11   ok=11   aborted=0  t3580=0  p50=227 ms
+pdu_session_release                  n=28   ok=17   aborted=2  t3580=0  p50=468 ms
+service_request_mo                   n=13   ok=13   aborted=0  t3580=0  p50=443 ms
+service_request_mt_paging            n=15   ok=15   aborted=0  t3580=0  p50=257 ms
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           29    29     1221ms     10ms     17ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    13     1128ms     33ms     53ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 11    11      628ms     58ms     99ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            13    13      733ms     78ms    141ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    11    11      227ms    325ms    349ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  17    17      468ms     30ms   5523ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   13    11      443ms      9ms     12ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            15     8      257ms     11ms   2262ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 0/13 (driver heuristic: 0), AMF duplicate-PSI drops 0, release-end->request gap p50 731 ms
+[15:50:11] deleting testbed namespaces
+[15:50:55] run e2e-2: done

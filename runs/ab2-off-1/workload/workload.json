@@ -1,0 +1,31 @@
+{
+  "out": "/home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/ab2-off-1/workload",
+  "ues": 150,
+  "duration": 180.0,
+  "target": null,
+  "ping_interval": 2.0,
+  "ping_timeout": 1,
+  "ping_sample": 64,
+  "reg_interval": 10.0,
+  "pdu_interval": 6.0,
+  "idle_interval": 4.0,
+  "idle_dwell": [
+    5.0,
+    30.0
+  ],
+  "idle_mt_share": 0.5,
+  "snapshot_interval": 15.0,
+  "proc_timeout": 25.0,
+  "t3580": 16.0,
+  "jitter": 0.3,
+  "seed": 7,
+  "summary": false,
+  "started": {
+    "ts": "2026-09-27T16:55:17.114+00:00",
+    "ts_ns": 1790528117114499688
+  },
+  "stopped": {
+    "ts": "2026-09-27T16:58:17.903+00:00",
+    "ts_ns": 1790528297903800048
+  }
+}

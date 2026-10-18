@@ -1,0 +1,60 @@
+[12:08:05] run m1b-logtime4: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[12:08:05]   gate ok   gtp5g loaded (0.0s)
+[12:08:05]   gate ok   storage tier reachable (0.05s)
+[12:08:05]   gate ok   cluster roles Ready (0.1s)
+[12:08:06] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[12:08:09]   gate ok   otel-gateway Ready (2.21s)
+[12:08:16]   gate ok   logs + metrics reach storage (6.06s)
+[12:08:16] stage 1: mongo
+[12:08:18]   gate ok   mongo Ready (2.22s)
+[12:08:18] stage 2: NRF
+[12:08:22]   gate ok   nrf SBI up (https) (3.61s)
+[12:08:22] stage 3: UPF
+[12:08:29]   gate ok   upf started (6.87s)
+[12:08:29] stage 4: control-plane NFs + webconsole (AF)
+[12:08:34]   gate ok   all NF types registered in NRF (2.64s)
+[12:08:34]   gate ok   smf<->upf PFCP association (0.12s)
+[12:08:34]   gate ok   amf Ready (0.1s)
+[12:08:35]   gate ok   ausf Ready (0.1s)
+[12:08:35]   gate ok   udm Ready (0.1s)
+[12:08:35]   gate ok   udr Ready (0.09s)
+[12:08:35]   gate ok   pcf Ready (0.09s)
+[12:08:36]   gate ok   nssf Ready (1.2s)
+[12:08:36]   gate ok   smf Ready (0.1s)
+[12:08:37]   gate ok   chf Ready (1.22s)
+[12:08:37]   gate ok   webui Ready (0.1s)
+[12:08:37]   gate ok   traces reach storage (0.01s)
+[12:08:37] stage 5: 150 subscribers
+[12:08:39]   gate ok   webui port-forward (1.49s)
+[12:08:42]   gate ok   150 subscribers provisioned
+[12:08:42] stage 6: 3 gNBs
+[12:08:44]   gate ok   gnb-0 NG Setup (1.28s)
+[12:08:45]   gate ok   gnb-1 NG Setup (0.11s)
+[12:08:47]   gate ok   gnb-2 NG Setup (2.38s)
+[12:08:47] stage 7: 150 UEs
+[12:09:22]   gate ok   150 UEs registered + PDU sessions with TUN (4.67s)
+[12:09:22]   gate ok   no pod restarts during bring-up (0.15s)
+[12:09:22] READY  run=m1b-logtime4  dir=../runs/m1b-logtime4  (TUN repairs: 1)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m1b-logtime4/workload
+pings: 3568  loss: 0.00%  rtt p50: 1.63 ms   (+74 first-after-wake probes, 34 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=3
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=1400 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=1302 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=767 ms
+pdu_session_establishment            n=28   ok=26   aborted=2  t3580=5  p50=943 ms
+pdu_session_establishment_initial    n=18   ok=17   aborted=1  t3580=0  p50=254 ms
+pdu_session_release                  n=28   ok=28   aborted=0  t3580=0  p50=491 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=598 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=362 ms
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45     1400ms     10ms     15ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18     1302ms     50ms    229ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      767ms     75ms     93ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            26    26      943ms    122ms  16324ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    17    17      254ms    330ms    359ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  28    28      491ms     26ms     42ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      598ms      9ms     59ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    23      362ms     17ms     99ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 5/26 (driver heuristic: 5), AMF duplicate-PSI drops 5, release-end->request gap p50 793 ms
+[12:12:48] deleting testbed namespaces
+[12:13:24] run m1b-logtime4: done

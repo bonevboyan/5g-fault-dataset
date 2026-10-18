@@ -1,0 +1,518 @@
+{
+  "args": {
+    "sizes": [
+      100,
+      200,
+      400
+    ],
+    "duration": 150.0,
+    "seed": 7,
+    "tempo": 100
+  },
+  "results": [
+    {
+      "ues": 100,
+      "phase": "done",
+      "error": null,
+      "wall_s": 188,
+      "bringup_s": 35.7,
+      "ue_gate_s": 0.18,
+      "pings": 11685,
+      "ping_loss_pct": 0.0,
+      "rtt_p50_ms": 0.8,
+      "rtt_p95_ms": 11.6,
+      "rtt_p99_ms": 33.2,
+      "ping_rounds": 60,
+      "min_registered": 100,
+      "min_active_sessions": 197,
+      "procedures": {
+        "pdu_session_release": {
+          "n": 25,
+          "ok": 25,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 118.2,
+          "p95_ms": 172.8
+        },
+        "pdu_session_establishment": {
+          "n": 25,
+          "ok": 25,
+          "aborted": 0,
+          "t3580": 8,
+          "p50_ms": 947.4,
+          "p95_ms": 17061.6
+        },
+        "deregistration_switch_off": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 672.8,
+          "p95_ms": 694.8
+        },
+        "initial_registration": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 154.8,
+          "p95_ms": 2757.1
+        },
+        "pdu_session_establishment_initial": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 409.0,
+          "p95_ms": 491.4
+        }
+      },
+      "erro_lines": {
+        "nrf": 0,
+        "amf": 11,
+        "ausf": 0,
+        "udm": 0,
+        "udr": 0,
+        "pcf": 0,
+        "nssf": 0,
+        "smf": 0,
+        "chf": 0,
+        "upf": 0
+      },
+      "resources": {
+        "nssf": {
+          "cpu_avg": 0.3,
+          "cpu_max": 1.41,
+          "mem_max_mib": 21,
+          "pids_max": 21
+        },
+        "chf": {
+          "cpu_avg": 0.3,
+          "cpu_max": 2.52,
+          "mem_max_mib": 28,
+          "pids_max": 22
+        },
+        "udm": {
+          "cpu_avg": 1.4,
+          "cpu_max": 12.24,
+          "mem_max_mib": 27,
+          "pids_max": 25
+        },
+        "smf": {
+          "cpu_avg": 2.9,
+          "cpu_max": 18.72,
+          "mem_max_mib": 42,
+          "pids_max": 25
+        },
+        "udr": {
+          "cpu_avg": 1.6,
+          "cpu_max": 12.56,
+          "mem_max_mib": 26,
+          "pids_max": 26
+        },
+        "ausf": {
+          "cpu_avg": 0.6,
+          "cpu_max": 5.09,
+          "mem_max_mib": 34,
+          "pids_max": 24
+        },
+        "pcf": {
+          "cpu_avg": 0.8,
+          "cpu_max": 7.85,
+          "mem_max_mib": 28,
+          "pids_max": 25
+        },
+        "amf": {
+          "cpu_avg": 2.2,
+          "cpu_max": 15.82,
+          "mem_max_mib": 33,
+          "pids_max": 27
+        },
+        "nrf": {
+          "cpu_avg": 2.5,
+          "cpu_max": 22.38,
+          "mem_max_mib": 26,
+          "pids_max": 26
+        },
+        "webui": {
+          "cpu_avg": 0.3,
+          "cpu_max": 7.95,
+          "mem_max_mib": 19,
+          "pids_max": 21
+        },
+        "node-exporter": {
+          "cpu_avg": 0.5,
+          "cpu_max": 4.0,
+          "mem_max_mib": 11,
+          "pids_max": 6
+        },
+        "mongodb": {
+          "cpu_avg": 5.0,
+          "cpu_max": 20.26,
+          "mem_max_mib": 70,
+          "pids_max": 52
+        },
+        "otel-collector": {
+          "cpu_avg": 5.0,
+          "cpu_max": 10.55,
+          "mem_max_mib": 148,
+          "pids_max": 26
+        },
+        "cadvisor": {
+          "cpu_avg": 2.2,
+          "cpu_max": 7.25,
+          "mem_max_mib": 43,
+          "pids_max": 28
+        },
+        "upf": {
+          "cpu_avg": 0.7,
+          "cpu_max": 4.99,
+          "mem_max_mib": 16,
+          "pids_max": 24
+        },
+        "ueransim": {
+          "cpu_avg": 189.5,
+          "cpu_max": 532.86,
+          "mem_max_mib": 370,
+          "pids_max": 2276
+        }
+      }
+    },
+    {
+      "ues": 200,
+      "phase": "done",
+      "error": null,
+      "wall_s": 205,
+      "bringup_s": 53.1,
+      "ue_gate_s": 2.78,
+      "pings": 16804,
+      "ping_loss_pct": 0.054,
+      "rtt_p50_ms": 1.1,
+      "rtt_p95_ms": 7.0,
+      "rtt_p99_ms": 12.5,
+      "ping_rounds": 43,
+      "min_registered": 199,
+      "min_active_sessions": 397,
+      "procedures": {
+        "pdu_session_release": {
+          "n": 25,
+          "ok": 25,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 134.0,
+          "p95_ms": 188.0
+        },
+        "pdu_session_establishment": {
+          "n": 25,
+          "ok": 24,
+          "aborted": 1,
+          "t3580": 2,
+          "p50_ms": 793.1,
+          "p95_ms": 16730.0
+        },
+        "deregistration_switch_off": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 698.7,
+          "p95_ms": 789.0
+        },
+        "initial_registration": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 221.1,
+          "p95_ms": 570.7
+        },
+        "pdu_session_establishment_initial": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 429.9,
+          "p95_ms": 798.3
+        }
+      },
+      "erro_lines": {
+        "nrf": 0,
+        "amf": 3,
+        "ausf": 0,
+        "udm": 0,
+        "udr": 0,
+        "pcf": 0,
+        "nssf": 0,
+        "smf": 0,
+        "chf": 0,
+        "upf": 0
+      },
+      "resources": {
+        "node-exporter": {
+          "cpu_avg": 0.5,
+          "cpu_max": 3.36,
+          "mem_max_mib": 10,
+          "pids_max": 7
+        },
+        "mongodb": {
+          "cpu_avg": 6.2,
+          "cpu_max": 28.68,
+          "mem_max_mib": 71,
+          "pids_max": 51
+        },
+        "cadvisor": {
+          "cpu_avg": 2.5,
+          "cpu_max": 10.17,
+          "mem_max_mib": 51,
+          "pids_max": 28
+        },
+        "otel-collector": {
+          "cpu_avg": 6.9,
+          "cpu_max": 16.47,
+          "mem_max_mib": 151,
+          "pids_max": 26
+        },
+        "smf": {
+          "cpu_avg": 5.9,
+          "cpu_max": 23.19,
+          "mem_max_mib": 55,
+          "pids_max": 25
+        },
+        "chf": {
+          "cpu_avg": 0.5,
+          "cpu_max": 1.73,
+          "mem_max_mib": 31,
+          "pids_max": 23
+        },
+        "ausf": {
+          "cpu_avg": 0.8,
+          "cpu_max": 3.9,
+          "mem_max_mib": 38,
+          "pids_max": 25
+        },
+        "nssf": {
+          "cpu_avg": 0.4,
+          "cpu_max": 2.52,
+          "mem_max_mib": 19,
+          "pids_max": 20
+        },
+        "udr": {
+          "cpu_avg": 3.3,
+          "cpu_max": 15.66,
+          "mem_max_mib": 29,
+          "pids_max": 25
+        },
+        "amf": {
+          "cpu_avg": 4.0,
+          "cpu_max": 18.46,
+          "mem_max_mib": 34,
+          "pids_max": 27
+        },
+        "pcf": {
+          "cpu_avg": 1.7,
+          "cpu_max": 8.2,
+          "mem_max_mib": 32,
+          "pids_max": 25
+        },
+        "udm": {
+          "cpu_avg": 2.8,
+          "cpu_max": 13.7,
+          "mem_max_mib": 29,
+          "pids_max": 24
+        },
+        "upf": {
+          "cpu_avg": 1.9,
+          "cpu_max": 18.74,
+          "mem_max_mib": 16,
+          "pids_max": 25
+        },
+        "nrf": {
+          "cpu_avg": 4.7,
+          "cpu_max": 22.84,
+          "mem_max_mib": 27,
+          "pids_max": 26
+        },
+        "webui": {
+          "cpu_avg": 0.5,
+          "cpu_max": 12.62,
+          "mem_max_mib": 20,
+          "pids_max": 21
+        },
+        "ueransim": {
+          "cpu_avg": 439.9,
+          "cpu_max": 1448.0,
+          "mem_max_mib": 907,
+          "pids_max": 4826
+        }
+      }
+    },
+    {
+      "ues": 400,
+      "phase": "done",
+      "error": null,
+      "wall_s": 284,
+      "bringup_s": 98.8,
+      "ue_gate_s": 1.26,
+      "pings": 8338,
+      "ping_loss_pct": 0.252,
+      "rtt_p50_ms": 1.2,
+      "rtt_p95_ms": 7.2,
+      "rtt_p99_ms": 12.9,
+      "ping_rounds": 11,
+      "min_registered": 396,
+      "min_active_sessions": 791,
+      "procedures": {
+        "pdu_session_release": {
+          "n": 25,
+          "ok": 25,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 246.9,
+          "p95_ms": 387.7
+        },
+        "deregistration_switch_off": {
+          "n": 14,
+          "ok": 14,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 948.1,
+          "p95_ms": 1426.9
+        },
+        "initial_registration": {
+          "n": 14,
+          "ok": 10,
+          "aborted": 1,
+          "t3580": 0,
+          "p50_ms": 513.9,
+          "p95_ms": 3007.4
+        },
+        "pdu_session_establishment_initial": {
+          "n": 10,
+          "ok": 10,
+          "aborted": 0,
+          "t3580": 0,
+          "p50_ms": 6674.3,
+          "p95_ms": 15956.7
+        },
+        "pdu_session_establishment": {
+          "n": 25,
+          "ok": 23,
+          "aborted": 1,
+          "t3580": 6,
+          "p50_ms": 3938.1,
+          "p95_ms": 17655.9
+        }
+      },
+      "erro_lines": {
+        "nrf": 0,
+        "amf": 9,
+        "ausf": 0,
+        "udm": 0,
+        "udr": 0,
+        "pcf": 0,
+        "nssf": 0,
+        "smf": 0,
+        "chf": 0,
+        "upf": 2
+      },
+      "resources": {
+        "otel-collector": {
+          "cpu_avg": 7.6,
+          "cpu_max": 20.77,
+          "mem_max_mib": 174,
+          "pids_max": 25
+        },
+        "mongodb": {
+          "cpu_avg": 7.3,
+          "cpu_max": 66.99,
+          "mem_max_mib": 77,
+          "pids_max": 57
+        },
+        "node-exporter": {
+          "cpu_avg": 0.7,
+          "cpu_max": 3.55,
+          "mem_max_mib": 10,
+          "pids_max": 9
+        },
+        "cadvisor": {
+          "cpu_avg": 2.7,
+          "cpu_max": 11.91,
+          "mem_max_mib": 65,
+          "pids_max": 28
+        },
+        "smf": {
+          "cpu_avg": 9.2,
+          "cpu_max": 39.8,
+          "mem_max_mib": 81,
+          "pids_max": 25
+        },
+        "udr": {
+          "cpu_avg": 4.8,
+          "cpu_max": 19.19,
+          "mem_max_mib": 30,
+          "pids_max": 25
+        },
+        "amf": {
+          "cpu_avg": 6.0,
+          "cpu_max": 21.2,
+          "mem_max_mib": 41,
+          "pids_max": 28
+        },
+        "udm": {
+          "cpu_avg": 4.6,
+          "cpu_max": 19.1,
+          "mem_max_mib": 35,
+          "pids_max": 25
+        },
+        "ausf": {
+          "cpu_avg": 1.3,
+          "cpu_max": 5.44,
+          "mem_max_mib": 36,
+          "pids_max": 25
+        },
+        "chf": {
+          "cpu_avg": 0.6,
+          "cpu_max": 1.81,
+          "mem_max_mib": 34,
+          "pids_max": 24
+        },
+        "nssf": {
+          "cpu_avg": 0.6,
+          "cpu_max": 2.3,
+          "mem_max_mib": 21,
+          "pids_max": 22
+        },
+        "pcf": {
+          "cpu_avg": 2.4,
+          "cpu_max": 9.09,
+          "mem_max_mib": 34,
+          "pids_max": 25
+        },
+        "upf": {
+          "cpu_avg": 3.8,
+          "cpu_max": 32.86,
+          "mem_max_mib": 17,
+          "pids_max": 25
+        },
+        "nrf": {
+          "cpu_avg": 7.4,
+          "cpu_max": 27.06,
+          "mem_max_mib": 25,
+          "pids_max": 26
+        },
+        "webui": {
+          "cpu_avg": 1.4,
+          "cpu_max": 51.71,
+          "mem_max_mib": 23,
+          "pids_max": 21
+        },
+        "ueransim": {
+          "cpu_avg": 747.5,
+          "cpu_max": 1810.33,
+          "mem_max_mib": 2611,
+          "pids_max": 9718
+        }
+      }
+    }
+  ]
+}

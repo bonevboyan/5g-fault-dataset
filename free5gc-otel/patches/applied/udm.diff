@@ -1,0 +1,47 @@
+diff --git a/internal/sbi/processor/ue_context_management.go b/internal/sbi/processor/ue_context_management.go
+index c4a135b..136f381 100644
+--- a/internal/sbi/processor/ue_context_management.go
++++ b/internal/sbi/processor/ue_context_management.go
+@@ -1,6 +1,7 @@
+ package processor
+ 
+ import (
++	"github.com/free5gc/f5gtrace"
+ 	"net/http"
+ 	"strconv"
+ 
+@@ -162,7 +163,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
+ 				AccessType:  models.AccessType_3_GPP_ACCESS,
+ 			}
+ 
+-			go func() {
++			f5gtrace.Go(func() {
+ 				logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmf3GppAccessRegContext.Guami)
+ 				pd := p.SendOnDeregistrationNotification(ueID,
+ 					oldAmf3GppAccessRegContext.DeregCallbackUri,
+@@ -170,7 +171,7 @@ func (p *Processor) RegistrationAmf3gppAccessProcedure(c *gin.Context,
+ 				if pd != nil {
+ 					logger.UecmLog.Errorf("RegistrationAmf3gppAccess: send DeregNotify fail %v", pd)
+ 				}
+-			}()
++			})
+ 		}
+ 
+ 		c.JSON(http.StatusOK, registerRequest)
+@@ -234,14 +235,14 @@ func (p *Processor) RegisterAmfNon3gppAccessProcedure(c *gin.Context,
+ 			AccessType:  models.AccessType_NON_3_GPP_ACCESS,
+ 		}
+ 
+-		go func() {
++		f5gtrace.Go(func() {
+ 			logger.UecmLog.Infof("Send DeregNotify to old AMF GUAMI=%v", oldAmfNon3GppAccessRegContext.Guami)
+ 			pd := p.SendOnDeregistrationNotification(ueID, oldAmfNon3GppAccessRegContext.DeregCallbackUri,
+ 				deregistData) // Deregistration Notify Triggered
+ 			if pd != nil {
+ 				logger.UecmLog.Errorf("RegisterAmfNon3gppAccess: send DeregNotify fail %v", pd)
+ 			}
+-		}()
++		})
+ 
+ 		c.JSON(http.StatusOK, registerRequest)
+ 	} else {

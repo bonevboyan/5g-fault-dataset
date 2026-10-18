@@ -1,0 +1,60 @@
+# Override: run the registration-chain NFs with native-OTel binaries, exporting to Jaeger.
+# Apply with:
+#   docker compose -f docker-compose.yaml -f docker-compose-otel.yaml up -d nrf amf ausf udm udr
+services:
+  free5gc-nrf:
+    image: free5gc/nrf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "nrf"
+  free5gc-amf:
+    image: free5gc/amf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "amf"
+  free5gc-ausf:
+    image: free5gc/ausf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "ausf"
+  free5gc-udm:
+    image: free5gc/udm:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "udm"
+  free5gc-udr:
+    image: free5gc/udr:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "udr"
+  free5gc-smf:
+    image: free5gc/smf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "smf"
+  free5gc-pcf:
+    image: free5gc/pcf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "pcf"
+  free5gc-nssf:
+    image: free5gc/nssf:otel
+    environment:
+      GIN_MODE: release
+      OTEL_EXPORTER_OTLP_ENDPOINT: "jaeger:4317"
+      OTEL_EXPORTER_OTLP_INSECURE: "true"
+      OTEL_SERVICE_NAME: "nssf"

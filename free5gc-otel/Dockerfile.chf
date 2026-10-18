@@ -1,0 +1,2 @@
+FROM free5gc/chf:v4.2.3
+COPY bin/chf /free5gc/chf

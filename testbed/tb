@@ -1,0 +1,619 @@
+#!/usr/bin/env python3
+"""tb — testbed control for the 5G core fault-injection dataset (Kubernetes / k3d).
+
+  tb cluster-up                      create the k3d cluster (k8s/cluster.yaml), pin node cpusets,
+                                     import images
+  tb store-up | store-down           storage tier (Tempo/Loki/Prometheus/Grafana, docker compose)
+  tb up [--gnbs G] [--ues-per-gnb K] clean rebuild of namespace f5g: PKI + configs, staged and
+        [--no-tracing]               readiness-gated bring-up, G gNB pods x K UEs, runs/<id>/
+  tb run ... [--duration S]          up + workload (runs/<id>/workload/) + teardown (--keep)
+  tb gates | ues | down
+
+Every `up` deletes and recreates the testbed namespaces (fresh Mongo, NRF state, certs copied
+from k8s/pki), so no run inherits state from the previous one. Stages must pass their gates
+before the next starts. A failed gate aborts the run and names the component; the partial
+manifest is still written. The docker-compose testbed of M1 remains as `tb-compose`.
+"""
+import argparse, copy, datetime as dt, hashlib, json, os, platform, re, shutil, subprocess, sys, time
+import threading
+import urllib.error, urllib.parse, urllib.request
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+K8S = os.path.join(ROOT, "k8s")
+STORE = os.path.join(ROOT, "storage", "compose.yaml")
+RUNS = os.path.join(ROOT, "..", "runs")
+STATE = os.path.join(ROOT, ".state")
+NS, TNS = "f5g", "f5g-telemetry"
+PLMN = "20893"
+CLUSTER = "f5g"
+CPUSETS = {"server-0": "12-15", "agent-0": "0-5", "agent-1": "6-11"}   # telemetry / core / ran
+STORE_CPUS = "16-19"
+CP_NFS = ["amf", "ausf", "udm", "udr", "pcf", "nssf", "smf", "chf"]
+NF_TYPES = {"AMF", "AUSF", "UDM", "UDR", "PCF", "NSSF", "SMF", "CHF"}
+COLLECTOR = "otel/opentelemetry-collector-contrib:0.120.0"
+# Images per node role (imagePullPolicy: Never). Importing only where a role's pods run keeps each
+# node's containerd store small; the host disk is shared with everything else on the machine.
+NODE_IMAGES = {
+    "agent-0": [f"free5gc/{n}:otel2" for n in ["nrf", "webui"] + CP_NFS]
+               + ["free5gc/upf:v4.2.3", "mongo:4.4", "busybox:1.37", COLLECTOR],
+    "agent-1": ["free5gc/ueransim:latest", COLLECTOR],
+    "server-0": [COLLECTOR, "prom/node-exporter:v1.8.2"],
+}
+IMAGES = ([f"free5gc/{n}:otel2" for n in ["nrf", "webui"] + CP_NFS] +
+          ["free5gc/upf:v4.2.3", "free5gc/ueransim:latest", "mongo:4.4",
+           "otel/opentelemetry-collector-contrib:0.120.0", "prom/node-exporter:v1.8.2", "busybox:1.37"])
+
+sys.path.insert(0, K8S)
+sys.path.insert(0, os.path.join(ROOT, "..", "workload"))
+import render  # noqa: E402
+import ue  # noqa: E402
+from ue import imsi  # noqa: E402
+
+
+def log(msg):
+    print(f"[{dt.datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
+
+
+def sh(*args, check=True, input=None):
+    r = subprocess.run(args, capture_output=True, text=True, input=input)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"{' '.join(args[:6])} failed ({r.returncode}): {r.stderr.strip()[:400]}")
+    return r.stdout
+
+
+def kc(*args, check=True, input=None):
+    return sh("kubectl", *args, check=check, input=input)
+
+
+def now():
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="milliseconds")
+
+
+# ---------------------------------------------------------------- readiness gates
+class GateFailed(Exception):
+    pass
+
+
+def wait_for(name, probe, timeout, interval=1.0, record=None):
+    """Poll probe() until it returns truthy. Records the gate's latency in the manifest."""
+    t0 = time.monotonic()
+    last = None
+    while time.monotonic() - t0 < timeout:
+        try:
+            ok = probe()
+            if ok:
+                took = round(time.monotonic() - t0, 2)
+                log(f"  gate ok   {name} ({took}s)")
+                if record is not None:
+                    record.append({"gate": name, "ok": True, "seconds": took})
+                return ok
+        except Exception as e:  # noqa: BLE001 — a failing probe just means "not yet"
+            last = e
+        time.sleep(interval)
+    if record is not None:
+        record.append({"gate": name, "ok": False, "seconds": timeout, "last_error": str(last)})
+    raise GateFailed(f"{name} not satisfied within {timeout}s" + (f" (last: {last})" if last else ""))
+
+
+def g_ready(app, ns=NS):
+    def probe():
+        out = kc("get", "pods", "-n", ns, "-l", f"app={app}", "-o",
+                 "jsonpath={range .items[*]}{.status.containerStatuses[0].ready}{' '}{end}")
+        if "true" not in out.split():
+            raise RuntimeError(f"{app} not Ready")
+        return True
+    return probe
+
+
+def g_log(app, pattern):
+    def probe():
+        out = kc("logs", "-n", NS, f"deploy/{app}", "--tail=-1", check=False)
+        return re.search(pattern, out) is not None
+    return probe
+
+
+def mongo_eval(js):
+    return kc("exec", "-n", NS, "deploy/db", "--", "mongo", "free5gc", "--quiet", "--eval", js).strip()
+
+
+def g_nfs_registered():
+    missing = NF_TYPES - set(json.loads(mongo_eval('JSON.stringify(db.NfProfile.distinct("nfType"))') or "[]"))
+    if missing:
+        raise RuntimeError(f"not registered with NRF: {sorted(missing)}")
+    return True
+
+
+def g_no_restarts():
+    bad = {n: p["restarts"] for n, p in pods().items() if p["restarts"]}
+    if bad:
+        raise RuntimeError(f"pods restarted: {bad}")
+    return True
+
+
+def g_gtp5g():
+    with open("/proc/modules") as f:
+        if not any(l.startswith("gtp5g ") for l in f):
+            raise RuntimeError("gtp5g kernel module not loaded (sudo insmod infra/gtp5g/gtp5g/gtp5g.ko)")
+    return True
+
+
+def g_store(host):
+    def probe():
+        for url in (f"http://{host}:3200/ready", f"http://{host}:3100/ready", f"http://{host}:9090/-/ready"):
+            with urllib.request.urlopen(url, timeout=2) as r:
+                if r.status != 200:
+                    raise RuntimeError(f"{url} -> {r.status}")
+        return True
+    return probe
+
+
+def k3d_host_ip():
+    """The host as seen from inside the k3d cluster: the gateway of the cluster's docker network.
+    Used instead of `host.k3d.internal`, which k3d injects into CoreDNS's NodeHosts: k3s rewrites
+    NodeHosts when it restarts (e.g. after a host reboot) and the entry is gone, and then every
+    collector silently fails to export."""
+    gw = sh("docker", "network", "inspect", f"k3d-{CLUSTER}", "-f", "{{range .IPAM.Config}}{{.Gateway}}{{end}}").strip()
+    if not gw:
+        raise RuntimeError(f"no gateway on docker network k3d-{CLUSTER}")
+    return gw
+
+
+def _loki_count(host, run_id, selector=""):
+    q = f'sum(count_over_time({{run_id="{run_id}"{selector}}}[10m]))'
+    with urllib.request.urlopen(f"http://{host}:3100/loki/api/v1/query?" + urllib.parse.urlencode({"query": q}),
+                                timeout=5) as r:
+        res = json.load(r)["data"]["result"]
+    return int(float(res[0]["value"][1])) if res else 0
+
+
+def g_telemetry_logs(host, run_id):
+    """Logs + metrics from inside the cluster actually land in the storage tier for this run."""
+    def probe():
+        if _loki_count(host, run_id) == 0:
+            raise RuntimeError("no log lines in Loki for this run yet")
+        q = urllib.parse.urlencode({"query": f'count({{run_id="{run_id}"}})'})
+        with urllib.request.urlopen(f"http://{host}:9090/api/v1/query?{q}", timeout=5) as r:
+            if not json.load(r)["data"]["result"]:
+                raise RuntimeError("no metric series in Prometheus for this run yet")
+        return True
+    return probe
+
+
+def g_telemetry_traces(host, run_id):
+    """NF traces (NRF registration / discovery calls) land in Tempo for this run."""
+    def probe():
+        q = urllib.parse.urlencode({"tags": f"run.id={run_id}", "limit": 1, "start": int(time.time()) - 600,
+                                    "end": int(time.time()) + 60})
+        with urllib.request.urlopen(f"http://{host}:3200/api/search?{q}", timeout=5) as r:
+            if not json.load(r).get("traces"):
+                raise RuntimeError("no traces in Tempo for this run yet")
+        return True
+    return probe
+
+
+def _node_tags(node):
+    have = sh("docker", "exec", f"k3d-{CLUSTER}-{node}", "crictl", "images", "-o", "json", check=False)
+    return {t: img["id"] for img in json.loads(have or '{"images": []}')["images"] for t in img.get("repoTags") or []}
+
+
+def _has(tags, image):
+    return bool({image, f"docker.io/{image}", f"docker.io/library/{image}"} & set(tags))
+
+
+def _node_id(tags, image):
+    for t in (image, f"docker.io/{image}", f"docker.io/library/{image}"):
+        if t in tags:
+            return tags[t]
+    return None
+
+
+def ensure_images(prune=False):
+    """Every image a node's pods need must be in that node's containerd store (imagePullPolicy is
+    Never), and be the same image as the host's tag. Import what's missing (e.g. after kubelet
+    image GC) or stale (a rebuilt NF image under the same tag would otherwise keep running the old
+    binary); with prune, remove testbed images a node doesn't run. Returns (node, image) imported."""
+    imported = []
+    for node, images in NODE_IMAGES.items():
+        tags = _node_tags(node)
+        for img in images:
+            local = sh("docker", "image", "inspect", "-f", "{{.Id}}", img, check=False).strip()
+            have = _node_id(tags, img)
+            if have is None or (local and have != local):
+                log(f"importing {img} -> {node}" + (" (stale)" if have else ""))
+                save = subprocess.Popen(["docker", "save", img], stdout=subprocess.PIPE)
+                r = subprocess.run(["docker", "exec", "-i", f"k3d-{CLUSTER}-{node}", "ctr", "-n", "k8s.io",
+                                    "images", "import", "-"], stdin=save.stdout, capture_output=True, text=True)
+                save.wait()
+                if r.returncode != 0:
+                    raise RuntimeError(f"import {img} into {node}: {r.stderr.strip()[:200]}")
+                imported.append((node, img))
+        if prune:
+            ours = [t for t in tags if any(_has([t], i) for i in IMAGES)]
+            extra = [t for t in ours if not any(_has([t], i) for i in images)]
+            if extra:
+                sh("docker", "exec", f"k3d-{CLUSTER}-{node}", "crictl", "rmi", *extra, check=False)
+                log(f"pruned {len(extra)} image(s) from {node}")
+    return imported
+
+
+def g_cluster():
+    out = kc("get", "nodes", "-L", "role", "--no-headers")
+    roles = {l.split()[-1] for l in out.splitlines() if " Ready " in f" {l} "}
+    if not {"core", "ran", "telemetry"} <= roles:
+        raise RuntimeError(f"cluster roles ready: {sorted(roles)} (run: tb cluster-up)")
+    return True
+
+
+# ---------------------------------------------------------------- subscribers
+class PortForward:
+    """kubectl port-forward to the webconsole for the duration of a with-block."""
+    def __init__(self, port=15000):
+        self.port = port
+
+    def __enter__(self):
+        self.p = subprocess.Popen(["kubectl", "port-forward", "-n", NS, "deploy/webui", f"{self.port}:5000"],
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        wait_for("webui port-forward", lambda: webui_token(self.port) is not None, 30)
+        return self
+
+    def __exit__(self, *exc):
+        self.p.terminate()
+        self.p.wait()
+
+
+def webui_token(port):
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/api/login", method="POST",
+                                 data=json.dumps({"username": "admin", "password": "free5gc"}).encode(),
+                                 headers={"Content-Type": "application/json"})
+    with urllib.request.urlopen(req, timeout=3) as r:
+        return json.load(r).get("access_token")
+
+
+def provision(n):
+    tmpl = json.load(open(os.path.join(ROOT, "config", "subscriber.json")))
+    with PortForward() as pf:
+        tok = webui_token(pf.port)
+        for i in range(n):
+            sub = imsi(i)
+            body = copy.deepcopy(tmpl)
+            body["ueId"] = sub
+            body["AuthenticationSubscription"]["sequenceNumber"] = "000000000023"
+            body["AccessAndMobilitySubscriptionData"]["gpsis"] = [f"msisdn-09{i:08d}"]  # must be unique
+            req = urllib.request.Request(f"http://127.0.0.1:{pf.port}/api/subscriber/{sub}/{PLMN}", method="POST",
+                                         data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json", "Token": tok})
+            try:
+                urllib.request.urlopen(req, timeout=10).close()
+            except urllib.error.HTTPError as e:
+                raise RuntimeError(f"provision {sub}: HTTP {e.code} {e.read().decode()[:200]}") from e
+    count = int(mongo_eval("db.subscriptionData.authenticationData.authenticationSubscription.countDocuments({})"))
+    if count < n:
+        raise RuntimeError(f"only {count} of {n} subscribers present in UDR")
+
+
+# ---------------------------------------------------------------- UEs
+def start_ues(n, tempo_ms):
+    """Start UEs on all gNBs in parallel; within a gNB, one every tempo_ms."""
+    ue.stop_all()
+    per = ue.layout()["ues_per_gnb"]
+
+    def one(g):
+        for i in range(g * per, min(n, (g + 1) * per)):
+            ue.start(imsi(i))
+            time.sleep(tempo_ms / 1000)
+    ts = [threading.Thread(target=one, args=(g,)) for g in ue.gnbs()]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+
+
+def repair_tunless(st, addr2if):
+    """Release sessions that are PS-ACTIVE but got no TUN. Concurrent nr-ue processes in one pod
+    can race for the same uesimtunN name (TUNSETIFF: busy); the UE re-establishes the released
+    session by itself and allocates a fresh TUN. Returns how many were released."""
+    n = 0
+    for u, s in st.items():
+        for x in s["sessions"]:
+            if x["state"] == "PS-ACTIVE" and x["address"] and x["address"] not in addr2if:
+                ue.cli(u, f"ps-release {x['id']}")
+                n += 1
+    return n
+
+
+def g_ues(n, repairs):
+    last_repair = [0.0]
+
+    def probe():
+        st = ue.states()
+        addr2if = ue.tun_by_address()
+        reg = sum(s["rm"] == "RM-REGISTERED" for s in st.values())
+        sess = sum(s["pdu_sessions"] for s in st.values())
+        tuns = sum(1 for s in st.values() for x in s["sessions"]
+                   if x["state"] == "PS-ACTIVE" and x["address"] in addr2if)
+        want = n * len(ue.SLICES)
+        if reg < n or sess < want or tuns < want:
+            if sess >= want and tuns < want and time.monotonic() - last_repair[0] > 10:
+                repairs.append(repair_tunless(st, addr2if))
+                last_repair[0] = time.monotonic()
+            raise RuntimeError(f"{reg}/{n} UEs registered, {sess}/{want} PDU sessions, "
+                               f"{tuns}/{want} with a TUN data path")
+        return st
+    return probe
+
+
+# ---------------------------------------------------------------- manifest
+def digest_dir(h, d):
+    for f in sorted(os.listdir(d)):
+        p = os.path.join(d, f)
+        if os.path.isfile(p) and not f.endswith(".key"):
+            h.update(f.encode())
+            h.update(open(p, "rb").read())
+
+
+def config_digest(rendered):
+    h = hashlib.sha256()
+    digest_dir(h, os.path.join(K8S, "config"))
+    digest_dir(h, os.path.join(K8S, "pki"))
+    for k in sorted(rendered):
+        h.update(rendered[k].encode())
+    return h.hexdigest()
+
+
+def pods():
+    out = kc("get", "pods", "-n", NS, "-o", "json", check=False)
+    rows = {}
+    for p in json.loads(out or '{"items": []}')["items"]:
+        cs = (p["status"].get("containerStatuses") or [{}])[0]
+        rows[p["metadata"]["name"]] = {"app": p["metadata"]["labels"].get("app"), "node": p["spec"].get("nodeName"),
+                                       "ip": p["status"].get("podIP"), "uid": p["metadata"]["uid"],
+                                       "image": cs.get("image"), "image_id": cs.get("imageID"),
+                                       "restarts": cs.get("restartCount")}
+    return rows
+
+
+def node_cpusets():
+    return {n: sh("docker", "inspect", "-f", "{{.HostConfig.CpusetCpus}}", f"k3d-{CLUSTER}-{n}", check=False).strip()
+            for n in CPUSETS}
+
+
+def write_manifest(run_dir, m):
+    os.makedirs(run_dir, exist_ok=True)
+    with open(os.path.join(run_dir, "manifest.json"), "w") as f:
+        json.dump(m, f, indent=2)
+
+
+# ---------------------------------------------------------------- commands
+def cmd_cluster_up(_):
+    if CLUSTER not in sh("k3d", "cluster", "list", "--no-headers", check=False).split():
+        log("creating k3d cluster")
+        sh("k3d", "cluster", "create", "--config", os.path.join(K8S, "cluster.yaml"))
+    for node, cpus in CPUSETS.items():
+        sh("docker", "update", "--cpuset-cpus", cpus, f"k3d-{CLUSTER}-{node}")
+    log(f"node cpusets: {node_cpusets()}")
+    log("importing images (per node role)")
+    ensure_images(prune=True)
+    wait_for("cluster roles Ready", g_cluster, 120, 2)
+
+
+def cmd_store_up(_):
+    sh("docker", "compose", "-f", STORE, "up", "-d")
+    for c in sh("docker", "compose", "-f", STORE, "ps", "-q").split():
+        sh("docker", "update", "--cpuset-cpus", STORE_CPUS, c)
+    wait_for("storage tier ready", g_store("127.0.0.1"), 120, 2)
+
+
+def cmd_store_down(_):
+    sh("docker", "compose", "-f", STORE, "down")
+
+
+def teardown():
+    kc("delete", "namespace", NS, TNS, "--ignore-not-found", "--wait=true", "--timeout=120s", check=False)
+
+
+def cmd_down(_):
+    log("deleting testbed namespaces")
+    teardown()
+
+
+def cmd_up(a):
+    run_id = a.run_id or dt.datetime.now().strftime("%Y%m%dT%H%M%S")
+    run_dir = os.path.join(RUNS, run_id)
+    n = a.gnbs * a.ues_per_gnb
+    store_in_cluster = k3d_host_ip() if a.store in ("127.0.0.1", "localhost") else a.store
+    gates, repairs = [], []
+    m = {"run_id": run_id, "phase": "bringup", "started_at": now(), "backend": "k8s",
+         "ran": {"gnbs": a.gnbs, "ues_per_gnb": a.ues_per_gnb, "ues": n},
+         "tracing": not a.no_tracing, "sbi_tls": True, "store": a.store,
+         "host": {"kernel": platform.release(), "cpus": os.cpu_count(), "node": platform.node()},
+         "gates": gates}
+    log(f"run {run_id}: clean rebuild, {a.gnbs} gNBs x {a.ues_per_gnb} UEs, tracing={'on' if not a.no_tracing else 'OFF'}")
+    try:
+        if n > a.gnbs * ue.MAX_UES_PER_GNB or a.ues_per_gnb * len(ue.SLICES) > ue.MAX_TUN:
+            raise RuntimeError(f"{a.ues_per_gnb} UEs per gNB exceeds UERANSIM's per-pod limits "
+                               f"(<= {ue.MAX_TUN // len(ue.SLICES)} UEs x {len(ue.SLICES)} sessions)")
+        wait_for("gtp5g loaded", g_gtp5g, 1, record=gates)
+        wait_for("storage tier reachable", g_store(a.store), 30, 2, record=gates)
+        wait_for("cluster roles Ready", g_cluster, 30, 2, record=gates)
+        m["images_reimported"] = ensure_images()
+        m["node_cpusets"] = node_cpusets()
+
+        teardown()
+        sh(os.path.join(K8S, "pki.sh"))
+        sh(sys.executable, os.path.join(K8S, "make_configs.py"), "--tacs", str(a.gnbs))
+        rendered = render.render(a.gnbs, run_id, store_in_cluster, tracing=not a.no_tracing)
+        m["config_sha256"] = config_digest(rendered)
+        os.makedirs(os.path.join(run_dir, "k8s"), exist_ok=True)
+        for k, v in rendered.items():
+            with open(os.path.join(run_dir, "k8s", f"{k}.yaml"), "w") as f:
+                f.write(v)
+        os.makedirs(STATE, exist_ok=True)
+        with open(os.path.join(STATE, "ran.json"), "w") as f:
+            json.dump({"backend": "k8s", "namespace": NS, "gnbs": a.gnbs, "ues_per_gnb": a.ues_per_gnb}, f)
+        ue._pods.clear()
+
+        apply = lambda comp: kc("apply", "-f", "-", input=rendered[comp])
+        log("stage 0: telemetry (collectors) + namespace, PKI secret, NF configs")
+        apply("telemetry")
+        kc("create", "namespace", NS)
+        kc("create", "secret", "generic", "f5g-pki", "-n", NS, f"--from-file={os.path.join(K8S, 'pki')}")
+        kc("create", "configmap", "f5g-config", "-n", NS, f"--from-file={os.path.join(K8S, 'config')}")
+        wait_for("otel-gateway Ready", g_ready("otel-gateway", TNS), 120, 2, record=gates)
+        # the collectors drop what they can't export: without this, a broken path to the storage
+        # tier yields a run that looks fine and has no telemetry
+        wait_for("logs + metrics reach storage", g_telemetry_logs(a.store, run_id), 60, 3, record=gates)
+
+        log("stage 1: mongo")
+        apply("db")
+        wait_for("mongo Ready", g_ready("db"), 120, 2, record=gates)
+
+        log("stage 2: NRF")
+        apply("nrf")
+        wait_for("nrf SBI up (https)", g_log("nrf", r"SBI server started"), 90, record=gates)
+
+        log("stage 3: UPF")
+        apply("upf")
+        wait_for("upf started", g_log("upf", r"UPF started"), 90, record=gates)
+
+        log("stage 4: control-plane NFs + webconsole (AF)")
+        for nf in CP_NFS + ["webui"]:
+            apply(nf)
+        wait_for("all NF types registered in NRF", g_nfs_registered, 120, 2, record=gates)
+        wait_for("smf<->upf PFCP association", g_log("smf", r"PFCP Association Setup Accepted Response"), 60,
+                 record=gates)
+        for nf in CP_NFS + ["webui"]:
+            wait_for(f"{nf} Ready", g_ready(nf), 60, 1, record=gates)
+        if not a.no_tracing:
+            wait_for("traces reach storage", g_telemetry_traces(a.store, run_id), 60, 3, record=gates)
+
+        log(f"stage 5: {n} subscribers")
+        provision(n)
+        gates.append({"gate": f"{n} subscribers provisioned", "ok": True})
+        log(f"  gate ok   {n} subscribers provisioned")
+
+        log(f"stage 6: {a.gnbs} gNBs")
+        for g in range(a.gnbs):
+            apply(f"gnb-{g}")
+        for g in range(a.gnbs):
+            wait_for(f"gnb-{g} NG Setup", g_log(f"gnb-{g}", r"NG Setup procedure is successful"), 90, record=gates)
+
+        log(f"stage 7: {n} UEs")
+        start_ues(n, a.tempo)
+        st = wait_for(f"{n} UEs registered + PDU sessions with TUN", g_ues(n, repairs),
+                      120 + n, 2, record=gates)
+        # a restart during bring-up means lost NF state (e.g. an SMF crash silently drops every SM
+        # context while UEs keep "active" sessions): never let such a run count as a baseline
+        wait_for("no pod restarts during bring-up", g_no_restarts, 1, record=gates)
+        m["tun_repairs"] = sum(repairs)
+        m["ue_states"] = {u: {k: s[k] for k in ("rm", "cm", "gnb", "pdu_sessions")} for u, s in st.items()}
+        m["phase"] = "ready"
+        log(f"READY  run={run_id}  dir={os.path.relpath(run_dir)}  (TUN repairs: {sum(repairs)})")
+    except Exception as e:  # noqa: BLE001 — any failure still writes the manifest
+        m["phase"] = "failed"
+        m["error"] = str(e)
+        log(f"FAILED {e}")
+    finally:
+        m["ready_at"] = now()
+        m["pods"] = pods()
+        write_manifest(run_dir, m)
+    if m["phase"] != "ready":
+        sys.exit(1)
+    return m
+
+
+def cmd_run(a):
+    """One dataset run: clean rebuild -> gates -> workload -> manifest [-> teardown]."""
+    m = cmd_up(a)
+    run_dir = os.path.join(RUNS, m["run_id"])
+    n = a.gnbs * a.ues_per_gnb
+    cmd = ["taskset", "-c", STORE_CPUS,   # keep the load generator's own CPU off the testbed cores
+           sys.executable, os.path.join(ROOT, "..", "workload", "driver.py"), "--out", os.path.join(run_dir, "workload"),
+           "--ues", str(n), "--duration", str(a.duration), "--seed", str(a.seed),
+           "--reg-interval", str(a.reg_interval), "--pdu-interval", str(a.pdu_interval),
+           "--idle-interval", str(a.idle_interval)]
+    m["phase"] = "workload"
+    m["workload_started_at"] = now()
+    write_manifest(run_dir, m)
+    rc = subprocess.run(cmd).returncode
+    m["workload_ended_at"] = now()
+    m["phase"] = "done" if rc == 0 else "workload_failed"
+    m["pods_at_end"] = pods()
+    m["restarts_during_run"] = {n: p["restarts"] for n, p in m["pods_at_end"].items() if p["restarts"]}
+    write_manifest(run_dir, m)
+    # re-time every procedure from UE/NF log timestamps (analysis/proc_timing.py). Before the
+    # teardown: the in-cluster log agents must still be running to flush the last lines to Loki.
+    sys.path.insert(0, os.path.join(ROOT, "..", "analysis"))
+    import proc_timing
+    try:
+        proc_timing.retime(run_dir, a.store, settle=30)
+        m["procedure_timing"] = "workload/procedures_timed.jsonl"
+        proc_timing.summarize(run_dir)
+    except Exception as e:  # noqa: BLE001 — the run's own data is already on disk
+        m["procedure_timing_error"] = str(e)
+        log(f"procedure timing failed: {e}")
+    write_manifest(run_dir, m)
+    if not a.keep:
+        cmd_down(a)
+    log(f"run {m['run_id']}: {m['phase']}")
+
+
+def cmd_gates(a):
+    checks = [("gtp5g", g_gtp5g), ("storage", g_store(a.store)), ("cluster", g_cluster),
+              ("mongo", g_ready("db")), ("nrf", g_log("nrf", r"SBI server started")),
+              ("nf-registration", g_nfs_registered),
+              ("pfcp", g_log("smf", r"PFCP Association Setup Accepted Response")),
+              *[(f"gnb-{g}", g_log(f"gnb-{g}", r"NG Setup procedure is successful")) for g in ue.gnbs()]]
+    bad = 0
+    for name, probe in checks:
+        try:
+            ok, err = bool(probe()), ""
+        except Exception as e:  # noqa: BLE001
+            ok, err = False, str(e)
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {name} {err}")
+    sys.exit(1 if bad else 0)
+
+
+def cmd_ues(_):
+    st = ue.states()
+    addr2if = ue.tun_by_address()
+    for u, s in sorted(st.items()):
+        addrs = ",".join((x["address"] or "-") + ("" if x["address"] in addr2if else "(no tun)") for x in s["sessions"])
+        print(f"{u}  gnb{s['gnb']} {s['rm']:<15} {s['cm'] or '-':<14} {s['mm']:<30} pdu={s['pdu_sessions']} {addrs}")
+    reg = sum(s["rm"] == "RM-REGISTERED" for s in st.values())
+    idle = sum(s["cm"] == "CM-IDLE" for s in st.values())
+    print(f"-- {reg}/{len(st)} registered, {idle} idle, {sum(s['pdu_sessions'] for s in st.values())} PDU sessions, "
+          f"{len(addr2if)} TUNs")
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = p.add_subparsers(dest="cmd", required=True)
+    store = argparse.ArgumentParser(add_help=False)
+    store.add_argument("--store", default=os.environ.get("STORE_HOST", "127.0.0.1"),
+                       help="storage-tier host (default 127.0.0.1 = this machine)")
+    bring = argparse.ArgumentParser(add_help=False, parents=[store])
+    bring.add_argument("--gnbs", type=int, default=3)
+    bring.add_argument("--ues-per-gnb", type=int, default=50)
+    bring.add_argument("--tempo", type=int, default=150, help="ms between UE start-ups within a gNB")
+    bring.add_argument("--run-id")
+    bring.add_argument("--no-tracing", action="store_true", help="unset the NFs' OTLP endpoint (overhead A/B)")
+    sub.add_parser("up", parents=[bring]).set_defaults(fn=cmd_up)
+    run = sub.add_parser("run", parents=[bring])
+    run.add_argument("--duration", type=float, default=300)
+    run.add_argument("--seed", type=int, default=1)
+    run.add_argument("--reg-interval", type=float, default=10.0)
+    run.add_argument("--pdu-interval", type=float, default=6.0)
+    run.add_argument("--idle-interval", type=float, default=4.0)
+    run.add_argument("--keep", action="store_true", help="leave the testbed running afterwards")
+    run.set_defaults(fn=cmd_run)
+    sub.add_parser("gates", parents=[store]).set_defaults(fn=cmd_gates)
+    for name, fn in [("cluster-up", cmd_cluster_up), ("down", cmd_down), ("ues", cmd_ues),
+                     ("store-up", cmd_store_up), ("store-down", cmd_store_down)]:
+        sub.add_parser(name).set_defaults(fn=fn)
+    a = p.parse_args()
+    a.fn(a)
+
+
+if __name__ == "__main__":
+    main()

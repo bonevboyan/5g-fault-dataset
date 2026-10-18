@@ -1,0 +1,2 @@
+FROM free5gc/nrf:v4.2.3
+COPY bin/nrf /free5gc/nrf

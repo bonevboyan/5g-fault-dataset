@@ -5,3 +5,5 @@ free5gc-otel/bin/
 # per-run state and generated PKI (testbed/k8s/pki.sh)
 testbed/.state/
 testbed/k8s/pki/
+# M0 clone of upstream free5gc-compose; its overlay files are archived in docs/m0-compose-overlay/
+free5gc-compose/

@@ -1,0 +1,85 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-mem-stress-smf-1",
+  "workload": {
+    "start_ns": 1794763566000722056,
+    "end_ns": 1794763746658593830
+  },
+  "fault": {
+    "id": "E-mem-stress-smf",
+    "level": "E",
+    "class": "memory_stress",
+    "title": "Memory pressure on the SMF",
+    "magnitude": {
+      "workers": 1,
+      "size": "1GiB"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment",
+        "pdu_session_release"
+      ]
+    },
+    "target": {
+      "nf": "smf",
+      "pods": [
+        {
+          "name": "smf-66888bb8f9-7l2lc",
+          "uid": "9d435480-453d-447f-b09a-a1b2ba69ca3d",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "smf-66888bb8f9-7l2lc",
+          "uid": "9d435480-453d-447f-b09a-a1b2ba69ca3d",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794763626148830792,
+    "removed_ns": 1794763686185524149,
+    "recovered_ns": 1794763686220789297,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "StressChaos",
+        "metadata": {
+          "name": "e-mem-stress-smf-m2-e-mem-stress-smf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-mem-stress-smf-1",
+            "f5g/fault": "E-mem-stress-smf"
+          }
+        },
+        "spec": {
+          "mode": "one",
+          "stressors": {
+            "memory": {
+              "workers": 1,
+              "size": "1GiB"
+            }
+          },
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "smf"
+            }
+          },
+          "duration": "60s"
+        }
+      },
+      "events": [],
+      "error": null
+    }
+  }
+}

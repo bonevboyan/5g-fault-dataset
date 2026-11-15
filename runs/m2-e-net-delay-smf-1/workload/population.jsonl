@@ -1,0 +1,12 @@
+{"ts": "2026-11-15T17:30:43.811+00:00", "ts_ns": 1794763843811596944, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 0, "active_sessions": 300}
+{"ts": "2026-11-15T17:30:59.115+00:00", "ts_ns": 1794763859115468576, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 3, "active_sessions": 300}
+{"ts": "2026-11-15T17:31:14.437+00:00", "ts_ns": 1794763874437450536, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 2, "active_sessions": 299}
+{"ts": "2026-11-15T17:31:29.746+00:00", "ts_ns": 1794763889746552884, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 5, "active_sessions": 300}
+{"ts": "2026-11-15T17:31:45.048+00:00", "ts_ns": 1794763905048049549, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 4, "active_sessions": 297}
+{"ts": "2026-11-15T17:32:00.420+00:00", "ts_ns": 1794763920420736012, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 5, "active_sessions": 295}
+{"ts": "2026-11-15T17:32:15.815+00:00", "ts_ns": 1794763935815541434, "ues_expected": 150, "ues_up": 150, "registered": 149, "idle": 5, "active_sessions": 294}
+{"ts": "2026-11-15T17:32:31.280+00:00", "ts_ns": 1794763951280249067, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 7, "active_sessions": 295}
+{"ts": "2026-11-15T17:32:46.651+00:00", "ts_ns": 1794763966651956850, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 7, "active_sessions": 294}
+{"ts": "2026-11-15T17:33:01.990+00:00", "ts_ns": 1794763981990508176, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 8, "active_sessions": 299}
+{"ts": "2026-11-15T17:33:17.333+00:00", "ts_ns": 1794763997333283446, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 8, "active_sessions": 296}
+{"ts": "2026-11-15T17:33:32.780+00:00", "ts_ns": 1794764012780833417, "ues_expected": 150, "ues_up": 150, "registered": 150, "idle": 7, "active_sessions": 299}

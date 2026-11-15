@@ -24,6 +24,16 @@ K8s events + UE-plane KPIs** with **RCA ground-truth labels** for a **cloud-nati
 | 3 | Fault scope | **Comprehensive but phased.** v1 = Levels E + A/B + D. v2 = Level C (adds a security/audit modality; gated). |
 | 4 | Primary uses | **All four** (RCA, cross-layer diagnosis, cross-modal AD, cross-system generalization) — served by one rich label schema, not extra injection work. |
 
+## M2 scope decisions (2026-11-15)
+
+- **v1 faults = level E (operational baseline) + level D (dependency & data layer).** A
+  (signalling floods) and B (PFCP/GTP-U) follow in a later version.
+- **10 runs per fault** (the plan's ≥ 10). Batch collection (M3) is meant for a dedicated server
+  (TU Delft testbed, Gunship), since 30 faults × 10 runs is about 25 h of recording.
+- **Open5GS: future work.**
+- **Multi-machine:** still a goal. Asking the supervisor for more servers is on hold; M2 is built
+  and validated on the laptop's k3d cluster first.
+
 ## Fault taxonomy (from [`5g_fault_catalogue.pdf`](5g_fault_catalogue.pdf))
 
 - **E — operational baseline** (Chaos Mesh): CPU, memory, pod-kill, net delay, packet loss, dependency. *Kept identical to generic-microservice datasets for cross-system comparability.*
@@ -78,5 +88,5 @@ Release: FAIR on Zenodo/4TU + scripted replication package + preliminary AD & RC
   re-establishments recover via T3580 after ~16 s); a proper fix would have to re-process the
   request outside the SMF's status-notify handler. Optional.
 - ~~Procedure timing from polling~~ Log-timed since 2026-09-28 (`analysis/proc_timing.py`).
-- Whether to add Open5GS as a 2nd system (cross-implementation claim) given one-laptop budget.
+- ~~Whether to add Open5GS as a 2nd system~~ Decided 2026-11-15: future work (named in the paper, not built now).
 - UE count ceiling on this hardware; runs-per-fault vs. wall-clock budget.

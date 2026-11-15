@@ -1,0 +1,13 @@
+run m2-e-net-delay-n3-1: fault E-net-delay-n3 on upf, injected at bin 0, target working again after 60.7s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     16     29     23     27     13     31     26     23     23     15     21
+k8s: events on upf                     0      0      0      0      0      0      2      0      0      0      0      2
+metrics: upf CPU (cores)            0.01   0.02   0.02   0.01   0.01   0.01   0.01   0.01   0.01   0.01   0.01   0.01
+metrics: upf memory (MiB)           11.6   11.4   12.1   12.9   12.0   12.0   12.0   11.7   11.7   11.7   11.4   12.8
+traces: traces with error spans        0      2      1      0      1      0      2      0      0      0      0      1
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     556.7  528.8  300.7  497.6  498.2  338.7  512.5  525.1  539.4  457.2  505.0  464.9
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.37   0.46   0.45   0.41   0.45   0.36  48.00  50.60  51.35  51.00  50.70  50.80

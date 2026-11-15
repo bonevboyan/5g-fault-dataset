@@ -1,0 +1,64 @@
+[18:59:22] run m2-e-pod-kill-udm-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[18:59:22]   gate ok   gtp5g loaded (0.0s)
+[18:59:22]   gate ok   storage tier reachable (0.02s)
+[18:59:22]   gate ok   cluster roles Ready (0.04s)
+[18:59:23] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[18:59:27]   gate ok   otel-gateway Ready (4.13s)
+[18:59:33]   gate ok   logs + metrics reach storage (6.03s)
+[18:59:33] stage 1: mongo
+[18:59:35]   gate ok   mongo Ready (2.1s)
+[18:59:35] stage 2: NRF
+[18:59:37]   gate ok   nrf SBI up (https) (1.11s)
+[18:59:37] stage 3: UPF
+[18:59:43]   gate ok   upf started (6.38s)
+[18:59:43] stage 4: control-plane NFs + webconsole (AF)
+[18:59:46]   gate ok   all NF types registered in NRF (2.24s)
+[18:59:46]   gate ok   smf<->upf PFCP association (0.04s)
+[18:59:46]   gate ok   amf Ready (0.04s)
+[18:59:46]   gate ok   ausf Ready (0.03s)
+[18:59:46]   gate ok   udm Ready (0.03s)
+[18:59:46]   gate ok   udr Ready (0.04s)
+[18:59:46]   gate ok   pcf Ready (0.04s)
+[18:59:46]   gate ok   nssf Ready (0.04s)
+[18:59:50]   gate ok   smf Ready (3.18s)
+[18:59:50]   gate ok   chf Ready (0.04s)
+[18:59:50]   gate ok   webui Ready (0.04s)
+[18:59:53]   gate ok   traces reach storage (3.02s)
+[18:59:53] stage 5: 150 subscribers
+[18:59:54]   gate ok   webui port-forward (1.2s)
+[18:59:55]   gate ok   150 subscribers provisioned
+[18:59:55] stage 6: 3 gNBs
+[18:59:57]   gate ok   gnb-0 NG Setup (1.1s)
+[18:59:57]   gate ok   gnb-1 NG Setup (0.05s)
+[18:59:57]   gate ok   gnb-2 NG Setup (0.05s)
+[18:59:57] stage 7: 150 UEs
+[19:00:16]   gate ok   150 UEs registered + PDU sessions with TUN (3.04s)
+[19:00:16]   gate ok   no pod restarts during bring-up (0.05s)
+[19:00:16] READY  run=m2-e-pod-kill-udm-1  dir=../runs/m2-e-pod-kill-udm-1  (TUN repairs: 3)
+[19:00:16]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-e-pod-kill-udm-1/workload
+[19:01:16] fault E-pod-kill-udm: injected (PodChaos e-pod-kill-udm-m2-e-pod-kill-udm-1)
+[19:01:18] fault E-pod-kill-udm: target Ready again after 1.7s
+pings: 4327  loss: 0.00%  rtt p50: 0.39 ms   (+78 first-after-wake probes, 34 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=536 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=781 ms
+initial_registration                 n=18   ok=17   aborted=0  t3580=0  p50=281 ms
+pdu_session_establishment            n=30   ok=30   aborted=0  t3580=10 p50=1161 ms
+pdu_session_establishment_initial    n=17   ok=17   aborted=0  t3580=0  p50=463 ms
+pdu_session_release                  n=30   ok=30   aborted=0  t3580=0  p50=208 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=219 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=115 ms
+[19:03:16] labels: E-pod-kill-udm injected=yes recovered=1.7s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45      536ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      781ms     18ms     20ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 17    17      281ms     23ms     68ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            30    30     1161ms    204ms  16655ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    17    17      463ms    312ms    317ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  30    30      208ms     17ms    144ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      219ms      4ms    156ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    23      115ms      3ms     23ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 10/30 (driver heuristic: 10), AMF duplicate-PSI drops 10, release-end->request gap p50 380 ms
+[19:03:21] deleting testbed namespaces
+[19:03:58] run m2-e-pod-kill-udm-1: done

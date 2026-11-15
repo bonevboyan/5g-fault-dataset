@@ -1,0 +1,86 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-net-loss-amf-1",
+  "workload": {
+    "start_ns": 1794764474402728679,
+    "end_ns": 1794764655035084109
+  },
+  "fault": {
+    "id": "E-net-loss-amf",
+    "level": "E",
+    "class": "network_loss",
+    "title": "20 % packet loss on all AMF traffic",
+    "magnitude": {
+      "loss_pct": 20
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "amf",
+      "procedures": [
+        "initial_registration",
+        "service_request_mo",
+        "service_request_mt_paging",
+        "an_release"
+      ]
+    },
+    "target": {
+      "nf": "amf",
+      "pods": [
+        {
+          "name": "amf-5c56865846-2rd69",
+          "uid": "14f8e80e-3ff7-487e-ace4-ded507f998a8",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "amf-5c56865846-2rd69",
+          "uid": "14f8e80e-3ff7-487e-ace4-ded507f998a8",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794764534549137549,
+    "removed_ns": 1794764594587382677,
+    "recovered_ns": 1794764594623935067,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "NetworkChaos",
+        "metadata": {
+          "name": "e-net-loss-amf-m2-e-net-loss-amf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-net-loss-amf-1",
+            "f5g/fault": "E-net-loss-amf"
+          }
+        },
+        "spec": {
+          "action": "loss",
+          "mode": "all",
+          "direction": "to",
+          "loss": {
+            "loss": "20",
+            "correlation": "0"
+          },
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "amf"
+            }
+          },
+          "duration": "60s"
+        }
+      },
+      "events": [],
+      "error": null
+    }
+  }
+}

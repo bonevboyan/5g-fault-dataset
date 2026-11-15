@@ -1,0 +1,32 @@
+id: E-net-delay-smf
+level: E
+class: network_delay
+title: 200 ms extra latency on all SMF traffic
+description: "Every packet the SMF sends (SBI to AMF/UDM/PCF/CHF/NRF, PFCP to the UPF) is delayed by 200\
+  \ ms \xB1 20 ms for 60 s. Session procedures slow down; nothing should fail outright."
+target:
+  nf: smf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  latency_ms: 200
+  jitter_ms: 20
+expected:
+  first_affected: smf
+  procedures:
+  - pdu_session_establishment
+  - pdu_session_release
+  - service_request_mt_paging
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: delay
+      mode: all
+      direction: to
+      delay:
+        latency: 200ms
+        jitter: 20ms
+        correlation: '0'

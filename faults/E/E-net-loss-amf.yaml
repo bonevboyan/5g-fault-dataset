@@ -1,0 +1,32 @@
+id: E-net-loss-amf
+level: E
+class: network_loss
+title: 20 % packet loss on all AMF traffic
+description: >-
+  One in five packets the AMF sends (NGAP over SCTP to the gNBs, SBI to the other NFs) is dropped for
+  60 s. SCTP and HTTP/2 retransmit, so expect delays, NAS timer retransmissions and some timeouts.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  loss_pct: 20
+expected:
+  first_affected: amf
+  procedures:
+  - initial_registration
+  - service_request_mo
+  - service_request_mt_paging
+  - an_release
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: loss
+      mode: all
+      direction: to
+      loss:
+        loss: '20'
+        correlation: '0'

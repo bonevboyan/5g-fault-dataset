@@ -1,0 +1,65 @@
+[19:13:30] run m2-e-net-delay-n3-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[19:13:30]   gate ok   gtp5g loaded (0.0s)
+[19:13:30]   gate ok   storage tier reachable (0.02s)
+[19:13:30]   gate ok   cluster roles Ready (0.04s)
+[19:13:31] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[19:13:35]   gate ok   otel-gateway Ready (4.13s)
+[19:13:38]   gate ok   logs + metrics reach storage (3.01s)
+[19:13:38] stage 1: mongo
+[19:13:40]   gate ok   mongo Ready (2.09s)
+[19:13:40] stage 2: NRF
+[19:13:42]   gate ok   nrf SBI up (https) (1.11s)
+[19:13:42] stage 3: UPF
+[19:13:48]   gate ok   upf started (6.4s)
+[19:13:48] stage 4: control-plane NFs + webconsole (AF)
+[19:13:51]   gate ok   all NF types registered in NRF (2.24s)
+[19:13:51]   gate ok   smf<->upf PFCP association (0.05s)
+[19:13:51]   gate ok   amf Ready (0.04s)
+[19:13:51]   gate ok   ausf Ready (0.04s)
+[19:13:51]   gate ok   udm Ready (0.04s)
+[19:13:51]   gate ok   udr Ready (0.05s)
+[19:13:51]   gate ok   pcf Ready (0.05s)
+[19:13:55]   gate ok   nssf Ready (3.17s)
+[19:13:55]   gate ok   smf Ready (0.04s)
+[19:13:55]   gate ok   chf Ready (0.04s)
+[19:13:55]   gate ok   webui Ready (0.04s)
+[19:13:55]   gate ok   traces reach storage (0.0s)
+[19:13:55] stage 5: 150 subscribers
+[19:13:56]   gate ok   webui port-forward (1.2s)
+[19:13:57]   gate ok   150 subscribers provisioned
+[19:13:57] stage 6: 3 gNBs
+[19:13:59]   gate ok   gnb-0 NG Setup (1.11s)
+[19:13:59]   gate ok   gnb-1 NG Setup (0.04s)
+[19:13:59]   gate ok   gnb-2 NG Setup (0.05s)
+[19:13:59] stage 7: 150 UEs
+[19:14:20]   gate ok   150 UEs registered + PDU sessions with TUN (5.24s)
+[19:14:20]   gate ok   no pod restarts during bring-up (0.05s)
+[19:14:20] READY  run=m2-e-net-delay-n3-1  dir=../runs/m2-e-net-delay-n3-1  (TUN repairs: 1)
+[19:14:20]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-e-net-delay-n3-1/workload
+[19:15:20] fault E-net-delay-n3: injected (NetworkChaos e-net-delay-n3-m2-e-net-delay-n3-1)
+[19:16:21] fault E-net-delay-n3: removed after 60s
+[19:16:21] fault E-net-delay-n3: target Ready again after 0.0s
+pings: 4072  loss: 0.00%  rtt p50: 0.69 ms   (+76 first-after-wake probes, 34 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=539 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=790 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=286 ms
+pdu_session_establishment            n=30   ok=30   aborted=0  t3580=10 p50=1176 ms
+pdu_session_establishment_initial    n=18   ok=18   aborted=0  t3580=0  p50=462 ms
+pdu_session_release                  n=30   ok=30   aborted=0  t3580=0  p50=205 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=212 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=110 ms
+[19:17:20] labels: E-net-delay-n3 injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45      539ms      4ms      8ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      790ms     18ms     82ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      286ms     23ms     95ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            30    30     1176ms    146ms  16959ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    18    18      462ms    311ms    318ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  30    30      205ms     17ms    130ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      212ms      4ms    137ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    23      110ms      3ms     22ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 10/30 (driver heuristic: 10), AMF duplicate-PSI drops 10, release-end->request gap p50 313 ms
+[19:17:25] deleting testbed namespaces
+[19:18:09] run m2-e-net-delay-n3-1: done

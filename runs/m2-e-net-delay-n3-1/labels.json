@@ -1,0 +1,120 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-net-delay-n3-1",
+  "workload": {
+    "start_ns": 1794766460387196373,
+    "end_ns": 1794766640867091731
+  },
+  "fault": {
+    "id": "E-net-delay-n3",
+    "level": "E",
+    "class": "network_delay",
+    "title": "50 ms extra latency on downlink user-plane traffic (UPF to gNBs)",
+    "magnitude": {
+      "latency_ms": 50,
+      "jitter_ms": 5,
+      "peer": "gnbs"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "upf",
+      "procedures": []
+    },
+    "target": {
+      "nf": "upf",
+      "pods": [
+        {
+          "name": "upf-7469d55486-njrp9",
+          "uid": "74d3e993-ab52-49bb-ad6d-84509d5871f8",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "upf-7469d55486-njrp9",
+          "uid": "74d3e993-ab52-49bb-ad6d-84509d5871f8",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794766520535300892,
+    "removed_ns": 1794766581150260382,
+    "recovered_ns": 1794766581189876655,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "NetworkChaos",
+        "metadata": {
+          "name": "e-net-delay-n3-m2-e-net-delay-n3-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-net-delay-n3-1",
+            "f5g/fault": "E-net-delay-n3"
+          }
+        },
+        "spec": {
+          "action": "delay",
+          "mode": "all",
+          "direction": "to",
+          "delay": {
+            "latency": "50ms",
+            "jitter": "5ms",
+            "correlation": "0"
+          },
+          "target": {
+            "mode": "all",
+            "selector": {
+              "namespaces": [
+                "f5g"
+              ],
+              "labelSelectors": {
+                "tier": "ran"
+              }
+            }
+          },
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "upf"
+            }
+          },
+          "duration": "60s"
+        }
+      },
+      "events": [
+        {
+          "target": "f5g/upf-7469d55486-njrp9",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T18:15:20Z",
+          "type": "Succeeded"
+        },
+        {
+          "target": "f5g/gnb-1-699745dd96-c8x5t",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T18:15:20Z",
+          "type": "Succeeded"
+        },
+        {
+          "target": "f5g/gnb-0-5bd6747fdf-pfjld",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T18:15:20Z",
+          "type": "Succeeded"
+        },
+        {
+          "target": "f5g/gnb-2-6bf4c754d7-m4j58",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T18:15:20Z",
+          "type": "Succeeded"
+        }
+      ],
+      "error": null
+    }
+  }
+}

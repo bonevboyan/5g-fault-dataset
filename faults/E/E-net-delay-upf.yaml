@@ -1,0 +1,35 @@
+id: E-net-delay-upf
+level: E
+class: network_delay
+title: 50 ms extra latency on all UPF traffic (user plane and PFCP)
+description: >-
+  Every packet the UPF sends is delayed by 50 ms for 60 s: downlink user data and the PFCP replies to
+  the SMF. UE round-trip times rise to ~50 ms, and the slower PFCP replies trigger SMF/AMF state races
+  (AN releases, registrations and PDU releases time out): a user-plane fault that spills into the control
+  plane (run m2-e-net-delay-upf-1). E-net-delay-n3 is the pure user-plane variant.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  latency_ms: 50
+  jitter_ms: 5
+expected:
+  first_affected: upf
+  procedures:
+  - an_release
+  - pdu_session_release
+  - initial_registration
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: delay
+      mode: all
+      direction: to
+      delay:
+        latency: 50ms
+        jitter: 5ms
+        correlation: '0'

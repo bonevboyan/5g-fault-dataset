@@ -1,0 +1,84 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-pod-kill-udm-1",
+  "workload": {
+    "start_ns": 1794765616231629789,
+    "end_ns": 1794765796686988514
+  },
+  "fault": {
+    "id": "E-pod-kill-udm",
+    "level": "E",
+    "class": "pod_kill",
+    "title": "UDM process crash",
+    "magnitude": {},
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 0,
+      "observe_s": 120,
+      "recovery_log": "Start SBI server"
+    },
+    "expected": {
+      "first_affected": "udm",
+      "procedures": [
+        "initial_registration",
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "udm",
+      "pods": [
+        {
+          "name": "udm-799db68cd6-r8bvm",
+          "uid": "743990b6-c7d0-48c7-ab01-c717ebce94bd",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "udm-799db68cd6-qk2nk",
+          "uid": "041f5a2d-1cb5-4fd9-8fcc-021e547c58fe",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794765676381420523,
+    "removed_ns": 1794765676381420523,
+    "recovered_ns": 1794765678102255853,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "PodChaos",
+        "metadata": {
+          "name": "e-pod-kill-udm-m2-e-pod-kill-udm-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-pod-kill-udm-1",
+            "f5g/fault": "E-pod-kill-udm"
+          }
+        },
+        "spec": {
+          "action": "pod-kill",
+          "mode": "one",
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "udm"
+            }
+          }
+        }
+      },
+      "events": [
+        {
+          "target": "f5g/udm-799db68cd6-r8bvm",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T18:01:16Z",
+          "type": "Succeeded"
+        }
+      ],
+      "error": null
+    }
+  }
+}

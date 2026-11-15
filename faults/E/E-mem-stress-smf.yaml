@@ -1,0 +1,30 @@
+id: E-mem-stress-smf
+level: E
+class: memory_stress
+title: Memory pressure on the SMF
+description: >-
+  A worker allocates and touches 1 GiB inside the SMF container for 60 s. There are no memory limits,
+  so this shows memory growth and node-level pressure rather than an OOM kill.
+target:
+  nf: smf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  workers: 1
+  size: 1GiB
+expected:
+  first_affected: smf
+  procedures:
+  - pdu_session_establishment
+  - pdu_session_release
+inject:
+  chaos:
+    kind: StressChaos
+    spec:
+      mode: one
+      stressors:
+        memory:
+          workers: 1
+          size: 1GiB

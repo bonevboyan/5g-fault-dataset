@@ -1,0 +1,94 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-net-partition-smf-upf-1",
+  "workload": {
+    "start_ns": 1794764747293810327,
+    "end_ns": 1794764928817737115
+  },
+  "fault": {
+    "id": "E-net-partition-smf-upf",
+    "level": "E",
+    "class": "network_partition",
+    "title": "Network cut between SMF and UPF (N4)",
+    "magnitude": {
+      "peer": "upf",
+      "direction": "both"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 30,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment",
+        "pdu_session_release",
+        "service_request_mo",
+        "service_request_mt_paging"
+      ]
+    },
+    "target": {
+      "nf": "smf",
+      "pods": [
+        {
+          "name": "smf-66888bb8f9-s2zqf",
+          "uid": "9a4481b1-2b71-493f-a5fc-13a3200c2d40",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "smf-66888bb8f9-s2zqf",
+          "uid": "9a4481b1-2b71-493f-a5fc-13a3200c2d40",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794764807440386648,
+    "removed_ns": 1794764837480533327,
+    "recovered_ns": 1794764837521610310,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "NetworkChaos",
+        "metadata": {
+          "name": "e-net-partition-smf-upf-m2-e-net-partition-smf-upf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-net-partition-smf-upf-1",
+            "f5g/fault": "E-net-partition-smf-upf"
+          }
+        },
+        "spec": {
+          "action": "partition",
+          "mode": "all",
+          "direction": "both",
+          "target": {
+            "mode": "all",
+            "selector": {
+              "namespaces": [
+                "f5g"
+              ],
+              "labelSelectors": {
+                "app": "upf"
+              }
+            }
+          },
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "smf"
+            }
+          },
+          "duration": "30s"
+        }
+      },
+      "events": [],
+      "error": null
+    }
+  }
+}

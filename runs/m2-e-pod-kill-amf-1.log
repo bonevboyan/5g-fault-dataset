@@ -1,0 +1,63 @@
+[18:49:31] run m2-e-pod-kill-amf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[18:49:31]   gate ok   gtp5g loaded (0.0s)
+[18:49:31]   gate ok   storage tier reachable (0.02s)
+[18:49:31]   gate ok   cluster roles Ready (0.04s)
+[18:49:32] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[18:49:36]   gate ok   otel-gateway Ready (4.13s)
+[18:49:40]   gate ok   logs + metrics reach storage (3.02s)
+[18:49:40] stage 1: mongo
+[18:49:42]   gate ok   mongo Ready (2.09s)
+[18:49:42] stage 2: NRF
+[18:49:43]   gate ok   nrf SBI up (https) (1.1s)
+[18:49:43] stage 3: UPF
+[18:49:49]   gate ok   upf started (6.39s)
+[18:49:49] stage 4: control-plane NFs + webconsole (AF)
+[18:49:52]   gate ok   all NF types registered in NRF (2.22s)
+[18:49:53]   gate ok   smf<->upf PFCP association (0.05s)
+[18:49:53]   gate ok   amf Ready (0.03s)
+[18:49:53]   gate ok   ausf Ready (0.03s)
+[18:49:53]   gate ok   udm Ready (0.04s)
+[18:49:53]   gate ok   udr Ready (0.04s)
+[18:49:53]   gate ok   pcf Ready (0.04s)
+[18:49:56]   gate ok   nssf Ready (3.2s)
+[18:49:56]   gate ok   smf Ready (0.04s)
+[18:49:56]   gate ok   chf Ready (0.04s)
+[18:49:56]   gate ok   webui Ready (0.04s)
+[18:49:56]   gate ok   traces reach storage (0.01s)
+[18:49:56] stage 5: 150 subscribers
+[18:49:57]   gate ok   webui port-forward (1.2s)
+[18:49:59]   gate ok   150 subscribers provisioned
+[18:49:59] stage 6: 3 gNBs
+[18:50:00]   gate ok   gnb-0 NG Setup (1.11s)
+[18:50:00]   gate ok   gnb-1 NG Setup (0.05s)
+[18:50:00]   gate ok   gnb-2 NG Setup (0.04s)
+[18:50:00] stage 7: 150 UEs
+[18:50:21]   gate ok   150 UEs registered + PDU sessions with TUN (5.53s)
+[18:50:21]   gate ok   no pod restarts during bring-up (0.05s)
+[18:50:21] READY  run=m2-e-pod-kill-amf-1  dir=../runs/m2-e-pod-kill-amf-1  (TUN repairs: 4)
+[18:50:21]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-e-pod-kill-amf-1/workload
+[18:51:22] fault E-pod-kill-amf: injected (PodChaos e-pod-kill-amf-m2-e-pod-kill-amf-1)
+[18:53:22] fault E-pod-kill-amf: target not recovered within 120s
+pings: 3918  loss: 1.45%  rtt p50: 0.53 ms   (+28 first-after-wake probes, 17 lost: UP re-activation)
+an_release                           n=42   ok=15   aborted=2  t3580=0  p50=544 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=797 ms
+initial_registration                 n=18   ok=6    aborted=3  t3580=0  p50=284 ms
+pdu_session_establishment            n=10   ok=9    aborted=0  t3580=1  p50=911 ms
+pdu_session_establishment_initial    n=6    ok=5    aborted=0  t3580=0  p50=479 ms
+pdu_session_release                  n=29   ok=10   aborted=3  t3580=0  p50=199 ms
+service_request_mo                   n=11   ok=11   aborted=0  t3580=0  p50=221 ms
+service_request_mt_paging            n=4    ok=3    aborted=0  t3580=0  p50=112 ms
+[18:53:23] labels: E-pod-kill-amf injected=yes recovered=no
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           15    15      544ms      4ms      8ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18     6      797ms     18ms     20ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                  6     6      284ms     26ms    247ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment             9     9      911ms     39ms  16752ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial     5     5      479ms    310ms    314ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  10    10      199ms     18ms    183ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   11     8      221ms      4ms     24ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging             3     3      112ms      2ms     26ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 1/9 (driver heuristic: 1), AMF duplicate-PSI drops 1, release-end->request gap p50 809 ms
+[18:53:58] deleting testbed namespaces
+[18:54:41] run m2-e-pod-kill-amf-1: done

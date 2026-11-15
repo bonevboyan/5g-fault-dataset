@@ -1,0 +1,13 @@
+run m2-e-pod-kill-nrf-1: fault E-pod-kill-nrf on nrf, injected at bin 0, target working again after 1.7s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       17     14     28     21     26     10     29     23     22     26     18     20
+k8s: events on nrf                     0      0      0      0      0      0     18      0      0      0      0      0
+metrics: nrf CPU (cores)            0.08   0.07   0.07   0.07   0.01   0.01   0.00   0.01   0.00   0.00   0.01   0.01
+metrics: nrf memory (MiB)           18.1   19.4   19.1   19.1   19.4   19.4    3.4   15.0   15.0   16.3   16.3   16.0
+traces: traces with error spans        1      0      0      1      0      0      0      0      2      0      0      0
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     559.9  466.8  461.2  523.4  494.3  353.1  449.7  503.7  475.4  467.3  518.5  442.5
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.39   0.49   0.45   0.38   0.49   0.32   0.33   0.48   0.68   0.35   0.78   0.66

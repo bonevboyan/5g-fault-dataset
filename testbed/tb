@@ -31,23 +31,28 @@ STORE_CPUS = "16-19"
 CP_NFS = ["amf", "ausf", "udm", "udr", "pcf", "nssf", "smf", "chf"]
 NF_TYPES = {"AMF", "AUSF", "UDM", "UDR", "PCF", "NSSF", "SMF", "CHF"}
 COLLECTOR = "otel/opentelemetry-collector-contrib:0.120.0"
+CHAOS_VERSION = "2.8.8"   # Chaos Mesh (fault injection, level E). `tb chaos-up` installs it.
+CHAOS_CTRL = f"ghcr.io/chaos-mesh/chaos-mesh:v{CHAOS_VERSION}"
+CHAOS_DAEMON = f"ghcr.io/chaos-mesh/chaos-daemon:v{CHAOS_VERSION}"
 # Images per node role (imagePullPolicy: Never). Importing only where a role's pods run keeps each
 # node's containerd store small; the host disk is shared with everything else on the machine.
 NODE_IMAGES = {
     "agent-0": [f"free5gc/{n}:otel2" for n in ["nrf", "webui"] + CP_NFS]
-               + ["free5gc/upf:v4.2.3", "mongo:4.4", "busybox:1.37", COLLECTOR],
-    "agent-1": ["free5gc/ueransim:latest", COLLECTOR],
-    "server-0": [COLLECTOR, "prom/node-exporter:v1.8.2"],
+               + ["free5gc/upf:v4.2.3", "mongo:4.4", "busybox:1.37", COLLECTOR, CHAOS_DAEMON],
+    "agent-1": ["free5gc/ueransim:latest", COLLECTOR, CHAOS_DAEMON],
+    "server-0": [COLLECTOR, "prom/node-exporter:v1.8.2", CHAOS_CTRL],
 }
 IMAGES = ([f"free5gc/{n}:otel2" for n in ["nrf", "webui"] + CP_NFS] +
           ["free5gc/upf:v4.2.3", "free5gc/ueransim:latest", "mongo:4.4",
-           "otel/opentelemetry-collector-contrib:0.120.0", "prom/node-exporter:v1.8.2", "busybox:1.37"])
+           "otel/opentelemetry-collector-contrib:0.120.0", "prom/node-exporter:v1.8.2", "busybox:1.37",
+           CHAOS_CTRL, CHAOS_DAEMON])
 
 sys.path.insert(0, K8S)
 sys.path.insert(0, os.path.join(ROOT, "..", "workload"))
 import render  # noqa: E402
 import ue  # noqa: E402
 from ue import imsi  # noqa: E402
+import faults  # noqa: E402
 
 
 def log(msg):
@@ -403,6 +408,21 @@ def cmd_store_up(_):
     wait_for("storage tier ready", g_store("127.0.0.1"), 120, 2)
 
 
+def g_chaos():
+    out = kc("get", "pods", "-n", "chaos-mesh", "--no-headers", check=False)
+    rows = [r.split() for r in out.splitlines() if r.strip()]
+    return rows and all(r[2] == "Running" and r[1].split("/")[0] == r[1].split("/")[1] for r in rows)
+
+
+def cmd_chaos_up(_):
+    """Install Chaos Mesh (fault injection for level-E faults) into the cluster; idempotent."""
+    ensure_images()
+    sh("helm", "repo", "add", "chaos-mesh", "https://charts.chaos-mesh.org", check=False)
+    sh("helm", "upgrade", "--install", "chaos-mesh", "chaos-mesh/chaos-mesh", "--version", CHAOS_VERSION,
+       "-n", "chaos-mesh", "--create-namespace", "-f", os.path.join(K8S, "chaos-mesh-values.yaml"))
+    wait_for("chaos-mesh Ready", g_chaos, 180, 3)
+
+
 def cmd_store_down(_):
     sh("docker", "compose", "-f", STORE, "down")
 
@@ -531,11 +551,29 @@ def cmd_run(a):
            "--ues", str(n), "--duration", str(a.duration), "--seed", str(a.seed),
            "--reg-interval", str(a.reg_interval), "--pdu-interval", str(a.pdu_interval),
            "--idle-interval", str(a.idle_interval)]
+    recipe = faults.load(a.fault) if a.fault else None
+    if recipe and "chaos" in recipe["inject"]:
+        wait_for("chaos-mesh Ready (tb chaos-up)", g_chaos, 30, 2)
+    m["fault"] = recipe["id"] if recipe else None
     m["phase"] = "workload"
     m["workload_started_at"] = now()
+    t0 = time.time_ns()
     write_manifest(run_dir, m)
+    inj = faults.Injection(recipe, m["run_id"], t0, log) if recipe else None
+    if inj:
+        inj.start()
     rc = subprocess.run(cmd).returncode
+    t1 = time.time_ns()
     m["workload_ended_at"] = now()
+    if inj:
+        inj.cancel()
+        inj.join(timeout=60)
+    labels = faults.write_labels(run_dir, m["run_id"], t0, t1, recipe, inj)
+    if recipe:
+        f = labels["fault"]
+        log(f"labels: {f['id']} injected={'yes' if f['injected_ns'] else 'NO'} "
+            f"recovered={'%.1fs' % ((f['recovered_ns'] - f['removed_ns']) / 1e9) if f['recovered_ns'] else 'no'}"
+            + (f" error={f['injector']['error']}" if f["injector"]["error"] else ""))
     m["phase"] = "done" if rc == 0 else "workload_failed"
     m["pods_at_end"] = pods()
     m["restarts_during_run"] = {n: p["restarts"] for n, p in m["pods_at_end"].items() if p["restarts"]}
@@ -607,10 +645,12 @@ def main():
     run.add_argument("--pdu-interval", type=float, default=6.0)
     run.add_argument("--idle-interval", type=float, default=4.0)
     run.add_argument("--keep", action="store_true", help="leave the testbed running afterwards")
+    run.add_argument("--fault", help="fault recipe to inject during the workload (faults/<level>/<id>.yaml)")
     run.set_defaults(fn=cmd_run)
     sub.add_parser("gates", parents=[store]).set_defaults(fn=cmd_gates)
     for name, fn in [("cluster-up", cmd_cluster_up), ("down", cmd_down), ("ues", cmd_ues),
-                     ("store-up", cmd_store_up), ("store-down", cmd_store_down)]:
+                     ("store-up", cmd_store_up), ("store-down", cmd_store_down),
+                     ("chaos-up", cmd_chaos_up)]:
         sub.add_parser(name).set_defaults(fn=fn)
     a = p.parse_args()
     a.fn(a)

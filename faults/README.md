@@ -33,8 +33,27 @@ inject:
     spec: {action: pod-kill, mode: one}
 ```
 
-Injector kinds: `chaos` (Chaos Mesh: PodChaos, NetworkChaos, StressChaos, ...). Level-D
-injectors (database, NRF, certificates) will add their own kinds.
+Injector kinds (exactly one per recipe):
+
+- `chaos`: a Chaos Mesh object (PodChaos, NetworkChaos, StressChaos, ...). Level E, plus the
+  level-D network faults on the database (`target.nf: db`).
+- `steps`: `apply` actions, and the `revert` actions that undo them after `duration_s`. Level D:
+
+  ```yaml
+  inject:
+    steps:
+      apply:  [{mongo: "<js>"}]     # run in the testbed MongoDB (database free5gc; also the NRF registry)
+      revert: [{mongo: "<js>"}]     # convention: apply saves what it changes in f5g_fault_backup
+  ```
+
+  `cert: expired | untrusted` gives the target NF a key/cert its peers must reject (expired
+  yesterday but signed by the testbed CA, or valid but signed by an unknown CA) and restarts its
+  pod; `cert: restore` removes it and restarts again. Mechanism: an optional per-NF secret
+  `f5g-pki-override-<nf>` that the pod copies over its testbed cert at start-up
+  (`testbed/k8s/render.py`). The revert always runs, also when the run ends early or a step fails.
+
+For a `steps` fault, `target.nf` is where the root cause lives (`db` for data faults, `nrf` for
+registry faults, the NF itself for certificate faults), not necessarily the pod the commands run in.
 
 ## Labels (`runs/<id>/labels.json`, schema `f5g-labels/1`)
 
@@ -49,7 +68,7 @@ injectors (database, NRF, certificates) will add their own kinds.
 | `fault.removed_ns` | when the injector withdrew it (= `injected_ns` for one-shot faults) |
 | `fault.recovered_ns` | when the target was observed working again (pod Ready and, if the recipe sets `recovery_log`, that log line seen), or `null` |
 | `fault.expected` | copied from the recipe |
-| `fault.injector` | how it was done (Chaos Mesh kind, object name, controller events) |
+| `fault.injector` | how it was done: Chaos Mesh object and controller events, or the steps and a log of each step's time and output |
 
 All timestamps are Unix nanoseconds on the host clock, the same clock as the workload records
 and the telemetry, so the labels join with every modality on time.
@@ -61,3 +80,5 @@ UERANSIM gNBs do not redo NG Setup after an AMF restart, and the lost GTP-U tunn
 re-created after a UPF restart. This is a property of the simulated RAN and is kept on purpose
 (docs/M2-findings.md).
 
+UEs whose registration fails during `D-db-auth-corrupt` or `D-nrf-drop-udm` stay deregistered
+for the rest of the run (UERANSIM does not retry after a reject). Also a RAN property.

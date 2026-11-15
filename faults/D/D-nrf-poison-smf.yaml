@@ -1,0 +1,37 @@
+id: D-nrf-poison-smf
+level: D
+class: nrf_poison
+title: Wrong SMF address in the NRF registry
+description: >-
+  The SMF's registration in the NRF is rewritten to point to an unreachable address for 60 s. The
+  AMF discovers the SMF afresh for every new data session, so each new session waits 10 s for a
+  connection that never succeeds and fails; sessions that already exist keep working, because the
+  AMF remembers their SMF. The SMF itself is healthy and logs nothing.
+target:
+  nf: nrf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  subject: smf
+  address: 10.255.255.1
+expected:
+  first_affected: amf
+  procedures: [pdu_session_establishment]
+inject:
+  steps:
+    apply:
+    - mongo: |
+        db.f5g_fault_backup.drop();
+        db.f5g_fault_backup.insertMany(db.NfProfile.find({nfType: "SMF"}).toArray());
+        printjson(db.NfProfile.updateMany({nfType: "SMF"}, {$set: {
+          ipv4Addresses: ["10.255.255.1"],
+          "nfServices.$[].apiPrefix": "https://10.255.255.1:8000",
+          "nfServices.$[].ipEndPoints": [{ipv4Address: "10.255.255.1", port: 8000}]}}));
+    revert:
+    - mongo: |
+        var n = 0;
+        db.f5g_fault_backup.find().forEach(d => { db.NfProfile.replaceOne({_id: d._id}, d, {upsert: true}); n++; });
+        db.f5g_fault_backup.drop();
+        print("restored " + n);

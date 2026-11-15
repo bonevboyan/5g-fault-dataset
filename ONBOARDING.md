@@ -161,7 +161,9 @@ tracking-area layout (default one TAC per gNB).
 **M2 in progress (2026-11-15).** Scope decided: levels E + D, 10 runs per fault, Open5GS as
 future work. Done: recipe format and labels (`faults/README.md`), `tb run --fault`, Chaos Mesh
 (`tb chaos-up`), the per-fault signal check (`analysis/fault_signals.py`), and 12 level-E
-recipes validated once each (`docs/M2-findings.md`). Next: level-D recipes, then batch runs.
+recipes validated once each (`docs/M2-findings.md`). Level D: 8 recipes (database, NRF registry,
+certificates) with a second injector, `steps`, validated once each. Next: batch runs (M3), meant
+for the Gunship server.
 
 **Then M2: the fault library.** Config-as-data fault definitions (`faults/`), one per catalogue
 entry for levels E, A/B and D; a label schema (fault class, target NF, injection start/stop,

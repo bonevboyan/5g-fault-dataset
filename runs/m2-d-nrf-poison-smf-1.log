@@ -1,0 +1,64 @@
+[23:17:30] run m2-d-nrf-poison-smf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[23:17:30]   gate ok   gtp5g loaded (0.0s)
+[23:17:30]   gate ok   storage tier reachable (0.02s)
+[23:17:30]   gate ok   cluster roles Ready (0.05s)
+[23:17:31] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[23:17:33]   gate ok   otel-gateway Ready (2.08s)
+[23:17:39]   gate ok   logs + metrics reach storage (6.03s)
+[23:17:39] stage 1: mongo
+[23:17:42]   gate ok   mongo Ready (2.09s)
+[23:17:42] stage 2: NRF
+[23:17:44]   gate ok   nrf SBI up (https) (2.15s)
+[23:17:44] stage 3: UPF
+[23:17:50]   gate ok   upf started (6.38s)
+[23:17:50] stage 4: control-plane NFs + webconsole (AF)
+[23:17:53]   gate ok   all NF types registered in NRF (2.24s)
+[23:17:54]   gate ok   smf<->upf PFCP association (0.05s)
+[23:17:54]   gate ok   amf Ready (0.05s)
+[23:17:54]   gate ok   ausf Ready (0.04s)
+[23:17:54]   gate ok   udm Ready (0.04s)
+[23:17:54]   gate ok   udr Ready (0.04s)
+[23:17:54]   gate ok   pcf Ready (0.04s)
+[23:17:54]   gate ok   nssf Ready (0.04s)
+[23:17:54]   gate ok   smf Ready (0.04s)
+[23:17:54]   gate ok   chf Ready (0.03s)
+[23:17:54]   gate ok   webui Ready (0.03s)
+[23:18:03]   gate ok   traces reach storage (9.07s)
+[23:18:03] stage 5: 150 subscribers
+[23:18:04]   gate ok   webui port-forward (1.2s)
+[23:18:06]   gate ok   150 subscribers provisioned
+[23:18:06] stage 6: 3 gNBs
+[23:18:08]   gate ok   gnb-0 NG Setup (2.15s)
+[23:18:08]   gate ok   gnb-1 NG Setup (0.05s)
+[23:18:08]   gate ok   gnb-2 NG Setup (0.05s)
+[23:18:08] stage 7: 150 UEs
+[23:18:29]   gate ok   150 UEs registered + PDU sessions with TUN (5.25s)
+[23:18:29]   gate ok   no pod restarts during bring-up (0.05s)
+[23:18:29] READY  run=m2-d-nrf-poison-smf-1  dir=../runs/m2-d-nrf-poison-smf-1  (TUN repairs: 1)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-nrf-poison-smf-1/workload
+[23:19:30] fault D-nrf-poison-smf: injected (1 step(s))
+[23:20:30] fault D-nrf-poison-smf: removed after 60s
+[23:20:30] fault D-nrf-poison-smf: target Ready again after 0.0s
+pings: 3958  loss: 1.21%  rtt p50: 0.48 ms   (+56 first-after-wake probes, 31 lost: UP re-activation)
+skipped slots (victim busy): pdu_session_churn=2
+an_release                           n=43   ok=33   aborted=0  t3580=0  p50=536 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=806 ms
+initial_registration                 n=18   ok=16   aborted=0  t3580=0  p50=291 ms
+pdu_session_establishment            n=29   ok=22   aborted=1  t3580=7  p50=837 ms
+pdu_session_establishment_initial    n=16   ok=12   aborted=0  t3580=0  p50=462 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=218 ms
+service_request_mo                   n=16   ok=16   aborted=0  t3580=0  p50=226 ms
+service_request_mt_paging            n=13   ok=13   aborted=0  t3580=0  p50=115 ms
+[23:21:30] labels: D-nrf-poison-smf injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           33    33      536ms      4ms      6ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    14      806ms     19ms    127ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 16    16      291ms     26ms   7278ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            22    22      837ms    190ms  16976ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    12    12      462ms    310ms    313ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      218ms     18ms  20309ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   16    13      226ms      3ms     22ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            13    13      115ms      3ms     22ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 7/22 (driver heuristic: 7), AMF duplicate-PSI drops 5, release-end->request gap p50 321 ms
+[23:21:35] deleting testbed namespaces
+[23:22:18] run m2-d-nrf-poison-smf-1: done

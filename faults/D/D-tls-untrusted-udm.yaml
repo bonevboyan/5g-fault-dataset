@@ -1,0 +1,27 @@
+id: D-tls-untrusted-udm
+level: D
+class: tls_cert
+title: UDM restarted with a certificate from an unknown CA
+description: >-
+  The UDM is restarted with a valid certificate signed by a CA the rest of the core does not trust,
+  like a certificate issued by the wrong authority. The NRF refuses its registration and the AUSF,
+  AMF and SMF refuse its TLS handshakes. After 60 s the testbed certificate is put back and the UDM
+  restarted again.
+target:
+  nf: udm
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 90
+  recovery_log: Start SBI server
+magnitude:
+  cert: untrusted
+expected:
+  first_affected: udm
+  procedures: [initial_registration, pdu_session_establishment]
+inject:
+  steps:
+    apply:
+    - cert: untrusted
+    revert:
+    - cert: restore

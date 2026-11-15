@@ -1,0 +1,92 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-tls-expired-smf-1",
+  "workload": {
+    "start_ns": 1794779554852626480,
+    "end_ns": 1794779735482230553
+  },
+  "fault": {
+    "id": "D-tls-expired-smf",
+    "level": "D",
+    "class": "tls_cert",
+    "title": "SMF restarted with an expired certificate",
+    "magnitude": {
+      "cert": "expired",
+      "expired_since_days": 1
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 90,
+      "recovery_log": "PFCP Association Setup Accepted Response"
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment",
+        "pdu_session_release"
+      ]
+    },
+    "target": {
+      "nf": "smf",
+      "pods": [
+        {
+          "name": "smf-77d9fb64d9-gg5ns",
+          "uid": "4b8b4d68-b774-47a4-87ac-0e9222ad8863",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "smf-77d9fb64d9-qn5tl",
+          "uid": "5355af31-4948-45d7-9eba-eaf79d2f8c72",
+          "node": "k3d-f5g-agent-0"
+        },
+        {
+          "name": "smf-77d9fb64d9-ssd4d",
+          "uid": "4ac9dd3e-0460-4e9c-89ed-38af45caa603",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794779615065263964,
+    "removed_ns": 1794779675207990391,
+    "recovered_ns": 1794779675901180641,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "cert": "expired"
+          }
+        ],
+        "revert": [
+          {
+            "cert": "restore"
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "cert",
+          "ts_ns": 1794779615065261307,
+          "restarted": true,
+          "cert": {
+            "subject": "SMF",
+            "issuer": "CN=f5g SBI root CA,O=f5g-testbed",
+            "not_before": "2026-10-16T21:53:34.912275+00:00",
+            "not_after": "2026-11-14T21:53:34.912275+00:00"
+          }
+        },
+        {
+          "phase": "revert",
+          "action": "cert",
+          "ts_ns": 1794779675207979426,
+          "restarted": true
+        }
+      ],
+      "error": null
+    }
+  }
+}

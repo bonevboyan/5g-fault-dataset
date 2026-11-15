@@ -1,0 +1,64 @@
+[23:12:40] run m2-d-db-sm-data-missing-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[23:12:40]   gate ok   gtp5g loaded (0.0s)
+[23:12:40]   gate ok   storage tier reachable (0.02s)
+[23:12:41]   gate ok   cluster roles Ready (0.05s)
+[23:12:41] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[23:12:44]   gate ok   otel-gateway Ready (2.09s)
+[23:12:50]   gate ok   logs + metrics reach storage (6.03s)
+[23:12:50] stage 1: mongo
+[23:12:52]   gate ok   mongo Ready (2.09s)
+[23:12:52] stage 2: NRF
+[23:12:54]   gate ok   nrf SBI up (https) (2.17s)
+[23:12:54] stage 3: UPF
+[23:13:01]   gate ok   upf started (6.37s)
+[23:13:01] stage 4: control-plane NFs + webconsole (AF)
+[23:13:04]   gate ok   all NF types registered in NRF (2.24s)
+[23:13:04]   gate ok   smf<->upf PFCP association (0.05s)
+[23:13:04]   gate ok   amf Ready (0.05s)
+[23:13:04]   gate ok   ausf Ready (0.04s)
+[23:13:04]   gate ok   udm Ready (0.05s)
+[23:13:04]   gate ok   udr Ready (0.04s)
+[23:13:04]   gate ok   pcf Ready (0.04s)
+[23:13:04]   gate ok   nssf Ready (0.04s)
+[23:13:04]   gate ok   smf Ready (0.04s)
+[23:13:04]   gate ok   chf Ready (0.04s)
+[23:13:04]   gate ok   webui Ready (0.04s)
+[23:13:13]   gate ok   traces reach storage (9.06s)
+[23:13:13] stage 5: 150 subscribers
+[23:13:14]   gate ok   webui port-forward (1.2s)
+[23:13:16]   gate ok   150 subscribers provisioned
+[23:13:16] stage 6: 3 gNBs
+[23:13:19]   gate ok   gnb-0 NG Setup (3.21s)
+[23:13:19]   gate ok   gnb-1 NG Setup (0.05s)
+[23:13:19]   gate ok   gnb-2 NG Setup (0.04s)
+[23:13:19] stage 7: 150 UEs
+[23:13:41]   gate ok   150 UEs registered + PDU sessions with TUN (5.44s)
+[23:13:41]   gate ok   no pod restarts during bring-up (0.05s)
+[23:13:41] READY  run=m2-d-db-sm-data-missing-1  dir=../runs/m2-d-db-sm-data-missing-1  (TUN repairs: 2)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-db-sm-data-missing-1/workload
+[23:14:41] fault D-db-sm-data-missing: injected (1 step(s))
+[23:15:41] fault D-db-sm-data-missing: removed after 60s
+[23:15:41] fault D-db-sm-data-missing: target Ready again after 0.0s
+pings: 4258  loss: 0.00%  rtt p50: 0.48 ms   (+78 first-after-wake probes, 33 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=552 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=790 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=280 ms
+pdu_session_establishment            n=29   ok=18   aborted=2  t3580=6  p50=1157 ms
+pdu_session_establishment_initial    n=18   ok=13   aborted=0  t3580=0  p50=457 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=211 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=212 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=117 ms
+[23:16:41] labels: D-db-sm-data-missing injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45      552ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      790ms     19ms    142ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      280ms     24ms    198ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            18    18     1157ms    127ms  16883ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    13    13      457ms    312ms    317ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      211ms     17ms    103ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      212ms      4ms     70ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    22      117ms      3ms     20ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 6/18 (driver heuristic: 6), AMF duplicate-PSI drops 4, release-end->request gap p50 742 ms
+[23:16:46] deleting testbed namespaces
+[23:17:30] run m2-d-db-sm-data-missing-1: done

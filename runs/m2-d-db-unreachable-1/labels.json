@@ -1,0 +1,92 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-db-unreachable-1",
+  "workload": {
+    "start_ns": 1794779953210307124,
+    "end_ns": 1794780133917797563
+  },
+  "fault": {
+    "id": "D-db-unreachable",
+    "level": "D",
+    "class": "db_unreachable",
+    "title": "MongoDB unreachable",
+    "magnitude": {
+      "loss_pct": 100,
+      "direction": "egress"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "udr",
+      "procedures": [
+        "initial_registration",
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "db",
+      "pods": [
+        {
+          "name": "db-54b97558ff-jwvg4",
+          "uid": "31e067e8-9446-4ef9-a9a2-c65771d2a632",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "db-54b97558ff-jwvg4",
+          "uid": "31e067e8-9446-4ef9-a9a2-c65771d2a632",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794780013355180415,
+    "removed_ns": 1794780074028395721,
+    "recovered_ns": 1794780074072531690,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "NetworkChaos",
+        "metadata": {
+          "name": "d-db-unreachable-m2-d-db-unreachable-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-d-db-unreachable-1",
+            "f5g/fault": "D-db-unreachable"
+          }
+        },
+        "spec": {
+          "action": "loss",
+          "mode": "all",
+          "loss": {
+            "loss": "100",
+            "correlation": "0"
+          },
+          "direction": "to",
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "db"
+            }
+          },
+          "duration": "60s"
+        }
+      },
+      "events": [
+        {
+          "target": "f5g/db-54b97558ff-jwvg4",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T22:00:13Z",
+          "type": "Succeeded"
+        }
+      ],
+      "error": null
+    }
+  }
+}

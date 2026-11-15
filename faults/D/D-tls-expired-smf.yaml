@@ -1,0 +1,28 @@
+id: D-tls-expired-smf
+level: D
+class: tls_cert
+title: SMF restarted with an expired certificate
+description: >-
+  The SMF is restarted with a certificate that expired yesterday, like a missed certificate
+  renewal. Its peers refuse its TLS handshakes (the AMF as a client, the NRF for the SMF's own
+  registration), so no data session can be created. After 60 s the valid certificate is put back
+  and the SMF restarted again. Both restarts drop the SMF's session state, like a pod kill.
+target:
+  nf: smf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 90
+  recovery_log: PFCP Association Setup Accepted Response
+magnitude:
+  cert: expired
+  expired_since_days: 1
+expected:
+  first_affected: smf
+  procedures: [pdu_session_establishment, pdu_session_release]
+inject:
+  steps:
+    apply:
+    - cert: expired
+    revert:
+    - cert: restore

@@ -1,0 +1,79 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-nrf-poison-smf-1",
+  "workload": {
+    "start_ns": 1794781109784418062,
+    "end_ns": 1794781290359282736
+  },
+  "fault": {
+    "id": "D-nrf-poison-smf",
+    "level": "D",
+    "class": "nrf_poison",
+    "title": "Wrong SMF address in the NRF registry",
+    "magnitude": {
+      "subject": "smf",
+      "address": "10.255.255.1"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "amf",
+      "procedures": [
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "nrf",
+      "pods": [
+        {
+          "name": "nrf-7b595f56d4-ksgcj",
+          "uid": "3810d535-14aa-4ba3-a08f-917a2fcbf7c7",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "nrf-7b595f56d4-ksgcj",
+          "uid": "3810d535-14aa-4ba3-a08f-917a2fcbf7c7",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794781170005664463,
+    "removed_ns": 1794781230206658791,
+    "recovered_ns": 1794781230243691012,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "mongo": "db.f5g_fault_backup.drop();\ndb.f5g_fault_backup.insertMany(db.NfProfile.find({nfType: \"SMF\"}).toArray());\nprintjson(db.NfProfile.updateMany({nfType: \"SMF\"}, {$set: {\n  ipv4Addresses: [\"10.255.255.1\"],\n  \"nfServices.$[].apiPrefix\": \"https://10.255.255.1:8000\",\n  \"nfServices.$[].ipEndPoints\": [{ipv4Address: \"10.255.255.1\", port: 8000}]}}));\n"
+          }
+        ],
+        "revert": [
+          {
+            "mongo": "var n = 0;\ndb.f5g_fault_backup.find().forEach(d => { db.NfProfile.replaceOne({_id: d._id}, d, {upsert: true}); n++; });\ndb.f5g_fault_backup.drop();\nprint(\"restored \" + n);\n"
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "mongo",
+          "ts_ns": 1794781170005659609,
+          "output": "{ \"acknowledged\" : true, \"matchedCount\" : 1, \"modifiedCount\" : 1 }"
+        },
+        {
+          "phase": "revert",
+          "action": "mongo",
+          "ts_ns": 1794781230206650805,
+          "output": "restored 1"
+        }
+      ],
+      "error": null
+    }
+  }
+}

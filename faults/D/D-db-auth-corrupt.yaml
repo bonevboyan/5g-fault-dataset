@@ -1,0 +1,36 @@
+id: D-db-auth-corrupt
+level: D
+class: db_tamper
+title: Corrupted subscriber keys in the UDR
+description: >-
+  The permanent key (K) of every subscriber is overwritten in the database for 60 s, like a bad
+  data migration. The core computes authentication vectors that no SIM can answer: every UE that
+  registers in that window gets a MAC failure and an Authentication Reject. Nothing in the core
+  crashes; the cause is in the data, the symptom at the AMF and AUSF. Revert restores only the key
+  (not the whole record, which would roll back the sequence numbers).
+target:
+  nf: db
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  subscribers: all
+  field: encPermanentKey
+expected:
+  first_affected: ausf
+  procedures: [initial_registration]
+inject:
+  steps:
+    apply:
+    - mongo: |
+        var c = db.subscriptionData.authenticationData.authenticationSubscription;
+        db.f5g_fault_backup.drop();
+        db.f5g_fault_backup.insertMany(c.find({}, {encPermanentKey: 1}).toArray());
+        printjson(c.updateMany({}, {$set: {encPermanentKey: "00000000000000000000000000000000"}}));
+    revert:
+    - mongo: |
+        var c = db.subscriptionData.authenticationData.authenticationSubscription, n = 0;
+        db.f5g_fault_backup.find().forEach(d => { c.updateOne({_id: d._id}, {$set: {encPermanentKey: d.encPermanentKey}}); n++; });
+        db.f5g_fault_backup.drop();
+        print("restored " + n);

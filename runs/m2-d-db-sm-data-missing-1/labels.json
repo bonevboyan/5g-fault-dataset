@@ -1,0 +1,82 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-db-sm-data-missing-1",
+  "workload": {
+    "start_ns": 1794780821233763838,
+    "end_ns": 1794781001854306245
+  },
+  "fault": {
+    "id": "D-db-sm-data-missing",
+    "level": "D",
+    "class": "db_tamper",
+    "title": "Session subscription data deleted for one slice",
+    "magnitude": {
+      "slice": {
+        "sst": 1,
+        "sd": "112233"
+      },
+      "subscribers": "all"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "db",
+      "pods": [
+        {
+          "name": "db-54b97558ff-tx6n5",
+          "uid": "00514911-7056-46a6-9dc6-cbbe425f2072",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "db-54b97558ff-tx6n5",
+          "uid": "00514911-7056-46a6-9dc6-cbbe425f2072",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794780881421332158,
+    "removed_ns": 1794780941614274676,
+    "recovered_ns": 1794780941652960842,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "mongo": "var c = db.subscriptionData.provisionedData.smData;\ndb.f5g_fault_backup.drop();\ndb.f5g_fault_backup.insertMany(c.find({\"singleNssai.sd\": \"112233\"}).toArray());\nprintjson(c.deleteMany({\"singleNssai.sd\": \"112233\"}));\n"
+          }
+        ],
+        "revert": [
+          {
+            "mongo": "var c = db.subscriptionData.provisionedData.smData, n = 0;\ndb.f5g_fault_backup.find().forEach(d => { c.replaceOne({_id: d._id}, d, {upsert: true}); n++; });\ndb.f5g_fault_backup.drop();\nprint(\"restored \" + n);\n"
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "mongo",
+          "ts_ns": 1794780881421328165,
+          "output": "{ \"acknowledged\" : true, \"deletedCount\" : 150 }"
+        },
+        {
+          "phase": "revert",
+          "action": "mongo",
+          "ts_ns": 1794780941614265868,
+          "output": "restored 150"
+        }
+      ],
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,64 @@
+[23:22:18] run m2-d-nrf-drop-udm-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[23:22:18]   gate ok   gtp5g loaded (0.0s)
+[23:22:18]   gate ok   storage tier reachable (0.02s)
+[23:22:18]   gate ok   cluster roles Ready (0.04s)
+[23:22:19] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[23:22:22]   gate ok   otel-gateway Ready (2.07s)
+[23:22:28]   gate ok   logs + metrics reach storage (6.03s)
+[23:22:28] stage 1: mongo
+[23:22:30]   gate ok   mongo Ready (2.09s)
+[23:22:30] stage 2: NRF
+[23:22:31]   gate ok   nrf SBI up (https) (1.11s)
+[23:22:31] stage 3: UPF
+[23:22:38]   gate ok   upf started (6.36s)
+[23:22:38] stage 4: control-plane NFs + webconsole (AF)
+[23:22:41]   gate ok   all NF types registered in NRF (2.26s)
+[23:22:41]   gate ok   smf<->upf PFCP association (0.04s)
+[23:22:41]   gate ok   amf Ready (0.03s)
+[23:22:41]   gate ok   ausf Ready (0.05s)
+[23:22:41]   gate ok   udm Ready (0.03s)
+[23:22:41]   gate ok   udr Ready (0.04s)
+[23:22:41]   gate ok   pcf Ready (0.04s)
+[23:22:44]   gate ok   nssf Ready (3.18s)
+[23:22:44]   gate ok   smf Ready (0.04s)
+[23:22:44]   gate ok   chf Ready (0.04s)
+[23:22:44]   gate ok   webui Ready (0.04s)
+[23:22:44]   gate ok   traces reach storage (0.01s)
+[23:22:44] stage 5: 150 subscribers
+[23:22:45]   gate ok   webui port-forward (1.2s)
+[23:22:47]   gate ok   150 subscribers provisioned
+[23:22:47] stage 6: 3 gNBs
+[23:22:49]   gate ok   gnb-0 NG Setup (2.16s)
+[23:22:49]   gate ok   gnb-1 NG Setup (0.04s)
+[23:22:49]   gate ok   gnb-2 NG Setup (0.04s)
+[23:22:49] stage 7: 150 UEs
+[23:23:26]   gate ok   150 UEs registered + PDU sessions with TUN (20.48s)
+[23:23:26]   gate ok   no pod restarts during bring-up (0.08s)
+[23:23:26] READY  run=m2-d-nrf-drop-udm-1  dir=../runs/m2-d-nrf-drop-udm-1  (TUN repairs: 5)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-nrf-drop-udm-1/workload
+[23:24:27] fault D-nrf-drop-udm: injected (1 step(s))
+[23:25:27] fault D-nrf-drop-udm: removed after 60s
+[23:25:27] fault D-nrf-drop-udm: target Ready again after 0.0s
+pings: 4336  loss: 0.00%  rtt p50: 0.51 ms   (+70 first-after-wake probes, 31 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=42   ok=42   aborted=0  t3580=0  p50=552 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=788 ms
+initial_registration                 n=18   ok=13   aborted=0  t3580=0  p50=288 ms
+pdu_session_establishment            n=29   ok=29   aborted=0  t3580=10 p50=856 ms
+pdu_session_establishment_initial    n=13   ok=12   aborted=0  t3580=0  p50=467 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=214 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=227 ms
+service_request_mt_paging            n=20   ok=20   aborted=0  t3580=0  p50=116 ms
+[23:26:27] labels: D-nrf-drop-udm injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           42    42      552ms      4ms      6ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      788ms     19ms    157ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 13    13      288ms     27ms     36ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            29    29      856ms     44ms  16752ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    12    12      467ms    311ms    315ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      214ms     18ms    183ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      227ms      4ms    203ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            20    20      116ms      4ms     25ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 10/29 (driver heuristic: 10), AMF duplicate-PSI drops 10, release-end->request gap p50 578 ms
+[23:26:32] deleting testbed namespaces
+[23:27:15] run m2-d-nrf-drop-udm-1: done

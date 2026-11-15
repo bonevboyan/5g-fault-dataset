@@ -1,0 +1,79 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-nrf-drop-udm-1",
+  "workload": {
+    "start_ns": 1794781406828627429,
+    "end_ns": 1794781587405497512
+  },
+  "fault": {
+    "id": "D-nrf-drop-udm",
+    "level": "D",
+    "class": "nrf_poison",
+    "title": "UDM missing from the NRF registry",
+    "magnitude": {
+      "subject": "udm"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "ausf",
+      "procedures": [
+        "initial_registration",
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "nrf",
+      "pods": [
+        {
+          "name": "nrf-7b595f56d4-5w2zl",
+          "uid": "2687c8e8-fa70-44f7-a014-01e4f47566dc",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "nrf-7b595f56d4-5w2zl",
+          "uid": "2687c8e8-fa70-44f7-a014-01e4f47566dc",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794781467052585659,
+    "removed_ns": 1794781527243847540,
+    "recovered_ns": 1794781527290939473,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "mongo": "db.f5g_fault_backup.drop();\ndb.f5g_fault_backup.insertMany(db.NfProfile.find({nfType: \"UDM\"}).toArray());\nprintjson(db.NfProfile.deleteMany({nfType: \"UDM\"}));\n"
+          }
+        ],
+        "revert": [
+          {
+            "mongo": "var n = 0;\ndb.f5g_fault_backup.find().forEach(d => { db.NfProfile.replaceOne({_id: d._id}, d, {upsert: true}); n++; });\ndb.f5g_fault_backup.drop();\nprint(\"restored \" + n);\n"
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "mongo",
+          "ts_ns": 1794781467052581600,
+          "output": "{ \"acknowledged\" : true, \"deletedCount\" : 1 }"
+        },
+        {
+          "phase": "revert",
+          "action": "mongo",
+          "ts_ns": 1794781527243820993,
+          "output": "restored 1"
+        }
+      ],
+      "error": null
+    }
+  }
+}

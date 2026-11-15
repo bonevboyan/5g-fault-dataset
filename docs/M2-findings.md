@@ -72,3 +72,38 @@ an AMF or UPF kill the rest of the run is a full outage, because the simulated R
 what real gNBs do (re-establish NGAP after an AMF restart), and nothing re-creates the lost GTP-U
 tunnels after a UPF restart. `recovered_ns` stays `null` for the AMF kill. Dataset users must know
 that after these two faults, "no recovery" is a property of the simulated RAN, not of the core.
+
+## Level-D recipes, one validation run each (2026-11-15)
+
+Level D breaks what the core depends on: its database, its NRF registry and its certificates.
+Same workload as level E (3 gNBs × 50 UEs, 180 s, seed 7), onset 60 s, held 60 s, then reverted.
+Runs `m2-d-<recipe>-1`; tables in `runs/<id>/fault_signals.txt` (`--span 120`, so they include
+the minute after the revert).
+
+Tooling: a second injector, `steps` (`apply` and `revert` actions; `faults/README.md`), with
+two actions: `mongo` (JavaScript run in the testbed MongoDB, which also stores the NRF registry)
+and `cert` (restart the target with a bad key/cert via an optional per-NF secret,
+`f5g-pki-override-<nf>`, `testbed/k8s/render.py`). Database network faults use Chaos Mesh on
+`app=db`. Manual checks done before writing the recipes: free5GC's NRF reads the registry from
+MongoDB on every discovery (no cache), the AMF discovers the SMF afresh for every new session, and
+an NF removed from the registry never re-registers by itself.
+
+| recipe | failed procedures while active (of all) | where it shows | notes |
+|---|---|---|---|
+| `D-db-unreachable` | 15 of 58: session setup, registration, AN release | failed procedures, error traces | **quiet**: hardly any extra ERRO/WARN lines; the UDR/PCF/NRF just wait on MongoDB |
+| `D-db-slow` (100 ms) | 0 of 70 | procedure latency p50 ~500 → ~840 ms | subtle, latency only |
+| `D-db-auth-corrupt` | 5 of 64: all initial registrations | failed registrations, AMF "MAC failure" WARN | the UEs that registered during the fault stay deregistered (UERANSIM does not retry after an Authentication Reject): 150 → 145 registered |
+| `D-db-sm-data-missing` | 13 of 68: session setup on slice 2 | failed sessions, SMF ERRO (`Get SessionManagementSubscriptionData error: 500`), error traces | slice 1 unaffected; cause in the UDR, symptom at the SMF |
+| `D-nrf-poison-smf` | 22 of 59: session setup, AN release, registration | failed procedures, 10–20 s latencies (connect timeouts), error traces | the SMF itself logs nothing; the AMF does |
+| `D-nrf-drop-udm` | 4 of 62: all initial registrations | failed registrations, AUSF ERRO (`UDM discovery failed`) | the UDM logs nothing; 3 UEs stay deregistered after the revert |
+| `D-tls-expired-smf` | 16 of 34: session setup/release, paging, AN release | everything: ERRO ×100 (`tls: expired certificate`), SMF memory reset, events, ping loss 100 % | the SMF cannot register with the NRF and exits after ~20 s; active sessions 300 → 70, back to 296 a minute after the revert |
+| `D-tls-untrusted-udm` | 14 of 62: session setup, registration | ERRO ×4, error traces, UDM memory reset, events | |
+
+What level D adds over level E: in five of the eight recipes, the component that is broken
+(the database or the NRF) shows nothing in its own logs or metrics. The evidence is entirely in
+other NFs and in the UE records. These are the cases a root-cause method has to trace back across
+the service graph, which is the point of the level.
+
+**Known behaviour, kept:** a UE whose registration fails during `D-db-auth-corrupt` or
+`D-nrf-drop-udm` stays deregistered for the rest of the run, because UERANSIM does not retry. As
+with the AMF/UPF kills in level E, this is a property of the simulated RAN.

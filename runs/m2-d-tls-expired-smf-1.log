@@ -1,0 +1,64 @@
+[22:50:43] run m2-d-tls-expired-smf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[22:50:43]   gate ok   gtp5g loaded (0.0s)
+[22:50:43]   gate ok   storage tier reachable (0.02s)
+[22:50:43]   gate ok   cluster roles Ready (0.04s)
+[22:51:21] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[22:51:24]   gate ok   otel-gateway Ready (2.08s)
+[22:51:30]   gate ok   logs + metrics reach storage (6.02s)
+[22:51:30] stage 1: mongo
+[22:51:32]   gate ok   mongo Ready (2.09s)
+[22:51:32] stage 2: NRF
+[22:51:33]   gate ok   nrf SBI up (https) (1.1s)
+[22:51:33] stage 3: UPF
+[22:51:40]   gate ok   upf started (6.39s)
+[22:51:40] stage 4: control-plane NFs + webconsole (AF)
+[22:51:43]   gate ok   all NF types registered in NRF (2.22s)
+[22:51:43]   gate ok   smf<->upf PFCP association (0.04s)
+[22:51:43]   gate ok   amf Ready (0.04s)
+[22:51:43]   gate ok   ausf Ready (0.04s)
+[22:51:43]   gate ok   udm Ready (0.03s)
+[22:51:43]   gate ok   udr Ready (0.04s)
+[22:51:43]   gate ok   pcf Ready (0.04s)
+[22:51:43]   gate ok   nssf Ready (0.04s)
+[22:51:43]   gate ok   smf Ready (0.04s)
+[22:51:43]   gate ok   chf Ready (0.04s)
+[22:51:44]   gate ok   webui Ready (1.07s)
+[22:51:53]   gate ok   traces reach storage (9.03s)
+[22:51:53] stage 5: 150 subscribers
+[22:51:54]   gate ok   webui port-forward (1.2s)
+[22:51:56]   gate ok   150 subscribers provisioned
+[22:51:56] stage 6: 3 gNBs
+[22:51:58]   gate ok   gnb-0 NG Setup (2.17s)
+[22:51:58]   gate ok   gnb-1 NG Setup (0.04s)
+[22:51:58]   gate ok   gnb-2 NG Setup (0.04s)
+[22:51:58] stage 7: 150 UEs
+[22:52:34]   gate ok   150 UEs registered + PDU sessions with TUN (20.3s)
+[22:52:34]   gate ok   no pod restarts during bring-up (0.06s)
+[22:52:34] READY  run=m2-d-tls-expired-smf-1  dir=../runs/m2-d-tls-expired-smf-1  (TUN repairs: 3)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-tls-expired-smf-1/workload
+[22:53:35] fault D-tls-expired-smf: injected (1 step(s))
+[22:54:35] fault D-tls-expired-smf: removed after 60s
+[22:54:35] fault D-tls-expired-smf: target Ready again after 0.7s
+pings: 2551  loss: 23.60%  rtt p50: 0.43 ms   (+38 first-after-wake probes, 12 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=35   ok=30   aborted=0  t3580=0  p50=551 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=775 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=292 ms
+pdu_session_establishment            n=15   ok=15   aborted=0  t3580=5  p50=1164 ms
+pdu_session_establishment_initial    n=18   ok=12   aborted=0  t3580=0  p50=462 ms
+pdu_session_release                  n=20   ok=15   aborted=1  t3580=0  p50=211 ms
+service_request_mo                   n=14   ok=14   aborted=0  t3580=0  p50=218 ms
+service_request_mt_paging            n=11   ok=9    aborted=0  t3580=0  p50=113 ms
+[22:55:35] labels: D-tls-expired-smf injected=yes recovered=0.7s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           30    30      551ms      3ms      6ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    17      775ms     17ms    149ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      292ms     29ms    235ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            15    15     1164ms     70ms  16942ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    12    12      462ms    314ms    316ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  15    15      211ms     18ms    184ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   14    12      218ms      5ms     40ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging             9     4      113ms      3ms      4ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 5/15 (driver heuristic: 5), AMF duplicate-PSI drops 5, release-end->request gap p50 562 ms
+[22:56:25] deleting testbed namespaces
+[22:57:04] run m2-d-tls-expired-smf-1: done

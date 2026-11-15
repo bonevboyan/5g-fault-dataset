@@ -423,7 +423,7 @@ def cmd_up(a):
     store_in_cluster = k3d_host_ip() if a.store in ("127.0.0.1", "localhost") else a.store
     gates, repairs = [], []
     m = {"run_id": run_id, "phase": "bringup", "started_at": now(), "backend": "k8s",
-         "ran": {"gnbs": a.gnbs, "ues_per_gnb": a.ues_per_gnb, "ues": n},
+         "ran": {"gnbs": a.gnbs, "ues_per_gnb": a.ues_per_gnb, "ues": n, "tacs": a.tacs or a.gnbs},
          "tracing": not a.no_tracing, "sbi_tls": True, "store": a.store,
          "host": {"kernel": platform.release(), "cpus": os.cpu_count(), "node": platform.node()},
          "gates": gates}
@@ -440,8 +440,8 @@ def cmd_up(a):
 
         teardown()
         sh(os.path.join(K8S, "pki.sh"))
-        sh(sys.executable, os.path.join(K8S, "make_configs.py"), "--tacs", str(a.gnbs))
-        rendered = render.render(a.gnbs, run_id, store_in_cluster, tracing=not a.no_tracing)
+        sh(sys.executable, os.path.join(K8S, "make_configs.py"), "--tacs", str(a.tacs or a.gnbs))
+        rendered = render.render(a.gnbs, run_id, store_in_cluster, tracing=not a.no_tracing, tacs=a.tacs or a.gnbs)
         m["config_sha256"] = config_digest(rendered)
         os.makedirs(os.path.join(run_dir, "k8s"), exist_ok=True)
         for k, v in rendered.items():
@@ -596,6 +596,7 @@ def main():
     bring.add_argument("--gnbs", type=int, default=3)
     bring.add_argument("--ues-per-gnb", type=int, default=50)
     bring.add_argument("--tempo", type=int, default=150, help="ms between UE start-ups within a gNB")
+    bring.add_argument("--tacs", type=int, help="tracking areas (default: one per gNB; 1 = all gNBs share TAC 1)")
     bring.add_argument("--run-id")
     bring.add_argument("--no-tracing", action="store_true", help="unset the NFs' OTLP endpoint (overhead A/B)")
     sub.add_parser("up", parents=[bring]).set_defaults(fn=cmd_up)

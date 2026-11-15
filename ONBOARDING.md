@@ -105,9 +105,8 @@ reference papers (ask Boyan).
     `free5gc-otel/util-patched` and `infra/gtp5g/gtp5g` point at the upstream commits we built
     from. `free5gc-otel/patches/applied/*.diff` are exact snapshots of the modified working
     tree and are what `apply-patches.sh` applies; `patches/*.patch` are the same changes split
-    by topic for reading. Note that the end-to-end patch's AMF `callback.go` hunks are
-    cumulative over the duplicate-PSI patch, so the topic patches do not apply in sequence;
-    use `apply-patches.sh`.
+    by topic for reading. Always use `apply-patches.sh`: the topic patches were written in
+    sequence and `e2e-trace-parent.patch` assumed the (since dropped) duplicate-PSI patch.
 17. **Faults are phased.** v1 = levels E (Chaos Mesh baseline, kept identical to generic
     microservice datasets for comparability), A/B (signalling and PFCP/GTP-U protocol faults),
     D (NRF/Mongo/TLS dependency faults). Level C (container security) is v2 and gated. All on an
@@ -140,36 +139,24 @@ procedure 100 % success, 0 restarts. `docs/M1b-findings.md`.
   `openapi-patched/f5g_patch.go`.
 - httptrace sub-spans created before the client span exist (orphan traces). Same file.
 - AMF drops a PDU session request whose PSI duplicates a context still being released, so
-  the UE recovers only via T3580 (~16 s). `patches/amf-duplicate-psi-reprocess.patch`. **This
-  patch is under suspicion, see section 5.**
+  the UE recovers only via T3580 (~16 s). Our patch for it
+  (`patches/amf-duplicate-psi-reprocess.patch`) caused ~30 % procedure timeouts and was
+  **dropped on 2026-11-15**; the race is now documented baseline behaviour.
 
 **Baseline behaviours that are not faults** and must be documented in the dataset schema:
-the T3580 re-establishment race (~14–16 % of UE re-establishments without the PSI patch), the
+the T3580 re-establishment race (~16–27 % of UE re-establishments), the
 single lost first packet on the other session after an idle wake-up (`first_after_wake`),
 dropped buffered downlink packets during paging, and a few per-session WARN lines (no BSF, no
 NSSF TA entry, CGF disabled).
 
 ## 5. Where it stands now and what to do next
 
-**Open problem (blocking M2).** Since the changes of 2026-09-28, about 25–35 % of AN releases,
-registrations and PDU releases time out in the driver (runs `fix-psi-tac2`, `e2e-1`, `e2e-2`)
-versus 0 % in `m1b-final`. Two things changed that day:
-1. the AMF duplicate-PSI patch (`patches/amf-duplicate-psi-reprocess.patch`);
-2. one TAC per gNB instead of a shared TAC 1 (`k8s/make_configs.py --tacs`, called from `tb`
-   with `--tacs <gnbs>`).
-
-Evidence: the SMF logs `Send SMContext Status Notification Problem … 500` from the AMF (the
-patched path), and the AMF aborts paging after 4 × T3513 for ~7 UEs (tracking areas). The PSI
-patch also did not remove the T3580 retries (5 in `e2e-1`, 0 in `e2e-2`).
-
-Plan: bisect with two runs on AC power, 3 gNBs × 50 UEs, 180 s, seed 7:
-- (a) AMF with the PSI patch reverted (`git apply -R` the PSI hunks in `free5gc-src/NFs/amf`,
-  rebuild the AMF with `build.sh amf`, rebuild and re-tag the `free5gc/amf:otel2` image);
-- (b) `--tacs 1` (edit the call in `tb`, or make it a flag).
-Compare failure rates in `runs/<id>/workload/procedures.jsonl` and
-`procedures_timed.jsonl`. Then revert one or both, and either keep the T3580 race as documented
-baseline behaviour or fix it properly. M2 must start from a 0 % baseline or every fault run
-inherits this noise.
+**Resolved 2026-11-15: the timeout regression.** Since 2026-09-28, 25–35 % of AN releases,
+registrations and PDU releases had timed out (0 % in `m1b-final`). A two-run bisect showed the
+AMF duplicate-PSI patch was the cause, not the per-gNB TACs. The patch is dropped and
+`bisect-a-nopsi` is back to 0 % failures, 0 % ping loss and clean traces (100 % single root,
+0 % orphans). Details: `docs/M1b-findings.md`, "Regression bisect". `tb --tacs N` selects the
+tracking-area layout (default one TAC per gNB).
 
 **Then M2: the fault library.** Config-as-data fault definitions (`faults/`), one per catalogue
 entry for levels E, A/B and D; a label schema (fault class, target NF, injection start/stop,

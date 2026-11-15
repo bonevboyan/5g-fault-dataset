@@ -119,12 +119,12 @@ def webui(tracing):
     return [headless("webui", [("http", 5000, "TCP")]), deployment("webui", spec, {"tier": "core"})]
 
 
-def gnb(i, gnbcfg, uecfg):
+def gnb(i, gnbcfg, uecfg, tacs=None):
     """One UERANSIM pod per gNB; its UEs run as nr-ue processes in the same pod (RLS over lo)."""
     name = f"gnb-{i}"
     nci = f"0x{(i + 1) << 4:09x}"                     # 36-bit NCI; gNB id = NCI >> 4 (idLength 32)
     cfgmap = {"apiVersion": "v1", "kind": "ConfigMap", "metadata": {"name": f"{name}-cfg", "namespace": NS},
-              "data": {"gnbcfg.yaml": gnbcfg.replace("NCI", nci).replace("TAC", str(i + 1)), "uecfg.yaml": uecfg}}
+              "data": {"gnbcfg.yaml": gnbcfg.replace("NCI", nci).replace("TAC", str(i % tacs + 1 if tacs else i + 1)), "uecfg.yaml": uecfg}}
     # IPv6 off: the kernel's link-local chatter (RS/MLD) on a UE TUN is uplink data, which makes
     # an idle UE send a Service Request by itself within ~0.3 s of every release
     cmd = ("sysctl -qw net.ipv6.conf.all.disable_ipv6=1 net.ipv6.conf.default.disable_ipv6=1 && "
@@ -201,7 +201,7 @@ def telemetry(run_id, store_host):
     return [sa, role, bind, *cms, agent, gw, gw_svc, nodeexp]
 
 
-def render(gnbs, run_id, store_host, tracing=True):
+def render(gnbs, run_id, store_host, tracing=True, tacs=None):
     """{component: yaml}. Components are applied stage by stage by `tb up`."""
     with open(os.path.join(HERE, "gnbcfg.tmpl.yaml")) as f:
         gnbcfg = f.read()
@@ -214,5 +214,5 @@ def render(gnbs, run_id, store_host, tracing=True):
     for n in CP_NFS:
         out[n] = y(nf(n, tracing))
     for i in range(gnbs):
-        out[f"gnb-{i}"] = y(gnb(i, gnbcfg, uecfg))
+        out[f"gnb-{i}"] = y(gnb(i, gnbcfg, uecfg, tacs))
     return out

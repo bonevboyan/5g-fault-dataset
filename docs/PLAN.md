@@ -72,13 +72,11 @@ Release: FAIR on Zenodo/4TU + scripted replication package + preliminary AD & RC
 - ~~Does free5GC stitch `parent_id`s across the SBI?~~ Yes, per hop, with the native-OTel bootstrap (M0).
 - ~~free5GC deployment path~~ For now: our own tier-separated compose testbed (`testbed/`), with
   k8s/VM re-hosting of tier 1 later.
-- **Regression since 2026-09-28** (duplicate-PSI patch + per-gNB TACs): ~30 % procedure timeouts
-  vs 0 % in `m1b-final`; SMF gets 500s on status notify, AMF aborts paging. Bisect, then revert
-  one or both (M1b-findings, "End-to-end traces").
-- The free5GC PDU re-establishment race (~16 % T3580 recoveries in fault-free runs). Root cause
-  found 2026-09-28: the AMF drops a request whose PSI duplicates a context that is still being
-  released (M1b-findings, "Log-timed procedures"). Either patch it or document it as baseline
-  behaviour.
+- ~~Regression since 2026-09-28~~ Bisected 2026-11-15: the duplicate-PSI patch caused it; patch
+  dropped, baseline back to 0 % failures (M1b-findings, "Regression bisect").
+- ~~The free5GC PDU re-establishment race~~ Documented as baseline behaviour (~16–27 % of
+  re-establishments recover via T3580 after ~16 s); a proper fix would have to re-process the
+  request outside the SMF's status-notify handler. Optional.
 - ~~Procedure timing from polling~~ Log-timed since 2026-09-28 (`analysis/proc_timing.py`).
 - Whether to add Open5GS as a 2nd system (cross-implementation claim) given one-laptop budget.
 - UE count ceiling on this hardware; runs-per-fault vs. wall-clock budget.

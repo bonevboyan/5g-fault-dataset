@@ -1,0 +1,76 @@
+[16:59:40] run bisect-b-tacs1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[16:59:40]   gate ok   gtp5g loaded (0.0s)
+[16:59:40]   gate ok   storage tier reachable (0.02s)
+[16:59:40]   gate ok   cluster roles Ready (0.04s)
+[16:59:40] importing free5gc/nrf:otel2 -> agent-0
+[16:59:42] importing free5gc/webui:otel2 -> agent-0
+[16:59:45] importing free5gc/amf:otel2 -> agent-0
+[16:59:47] importing free5gc/ausf:otel2 -> agent-0
+[16:59:49] importing free5gc/udm:otel2 -> agent-0
+[16:59:50] importing free5gc/udr:otel2 -> agent-0
+[16:59:52] importing free5gc/pcf:otel2 -> agent-0
+[16:59:54] importing free5gc/nssf:otel2 -> agent-0
+[16:59:56] importing free5gc/smf:otel2 -> agent-0
+[16:59:57] importing free5gc/chf:otel2 -> agent-0
+[16:59:59] importing free5gc/upf:v4.2.3 -> agent-0
+[17:00:02] importing mongo:4.4 -> agent-0
+[17:00:06] importing busybox:1.37 -> agent-0
+[17:00:06] importing otel/opentelemetry-collector-contrib:0.120.0 -> agent-0
+[17:00:09] importing free5gc/ueransim:latest -> agent-1
+[17:00:13] importing otel/opentelemetry-collector-contrib:0.120.0 -> agent-1
+[17:00:16] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[17:00:18]   gate ok   otel-gateway Ready (2.08s)
+[17:00:24]   gate ok   logs + metrics reach storage (6.04s)
+[17:00:24] stage 1: mongo
+[17:00:26]   gate ok   mongo Ready (2.1s)
+[17:00:26] stage 2: NRF
+[17:00:28]   gate ok   nrf SBI up (https) (1.11s)
+[17:00:28] stage 3: UPF
+[17:00:34]   gate ok   upf started (6.41s)
+[17:00:34] stage 4: control-plane NFs + webconsole (AF)
+[17:00:37]   gate ok   all NF types registered in NRF (2.25s)
+[17:00:37]   gate ok   smf<->upf PFCP association (0.05s)
+[17:00:37]   gate ok   amf Ready (0.04s)
+[17:00:37]   gate ok   ausf Ready (0.04s)
+[17:00:37]   gate ok   udm Ready (0.05s)
+[17:00:38]   gate ok   udr Ready (0.05s)
+[17:00:38]   gate ok   pcf Ready (0.04s)
+[17:00:38]   gate ok   nssf Ready (0.03s)
+[17:00:38]   gate ok   smf Ready (0.03s)
+[17:00:41]   gate ok   chf Ready (3.18s)
+[17:00:41]   gate ok   webui Ready (0.05s)
+[17:00:41]   gate ok   traces reach storage (0.01s)
+[17:00:41] stage 5: 150 subscribers
+[17:00:42]   gate ok   webui port-forward (1.2s)
+[17:00:43]   gate ok   150 subscribers provisioned
+[17:00:43] stage 6: 3 gNBs
+[17:00:45]   gate ok   gnb-0 NG Setup (1.11s)
+[17:00:45]   gate ok   gnb-1 NG Setup (0.05s)
+[17:00:45]   gate ok   gnb-2 NG Setup (0.06s)
+[17:00:45] stage 7: 150 UEs
+[17:01:09]   gate ok   150 UEs registered + PDU sessions with TUN (8.07s)
+[17:01:09]   gate ok   no pod restarts during bring-up (0.05s)
+[17:01:09] READY  run=bisect-b-tacs1  dir=../runs/bisect-b-tacs1  (TUN repairs: 5)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/bisect-b-tacs1/workload
+pings: 3781  loss: 2.80%  rtt p50: 0.44 ms   (+49 first-after-wake probes, 39 lost: UP re-activation)
+skipped slots (victim busy): pdu_session_churn=1
+an_release                           n=45   ok=31   aborted=0  t3580=0  p50=545 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=805 ms
+initial_registration                 n=18   ok=8    aborted=3  t3580=0  p50=308 ms
+pdu_session_establishment            n=17   ok=12   aborted=0  t3580=0  p50=803 ms
+pdu_session_establishment_initial    n=8    ok=8    aborted=0  t3580=0  p50=459 ms
+pdu_session_release                  n=29   ok=17   aborted=2  t3580=0  p50=210 ms
+service_request_mo                   n=12   ok=12   aborted=0  t3580=0  p50=254 ms
+service_request_mt_paging            n=15   ok=15   aborted=0  t3580=0  p50=114 ms
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           31    31      545ms      4ms      8ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18     8      805ms     23ms    220ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                  8     8      308ms     35ms  25058ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            12    12      803ms     30ms    118ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial     8     8      459ms    313ms    316ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  17    17      210ms     18ms   4322ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   12     7      254ms      4ms    140ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            15     8      114ms     23ms    393ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 0/12 (driver heuristic: 0), AMF duplicate-PSI drops 0, release-end->request gap p50 534 ms
+[17:04:48] deleting testbed namespaces
+[17:05:26] run bisect-b-tacs1: done

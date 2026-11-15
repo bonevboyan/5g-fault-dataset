@@ -79,7 +79,9 @@ def main():
     m = json.load(open(f"{a.run}/manifest.json"))
     start = ts(m["workload_started_at"] if a.phase == "workload" and m.get("workload_started_at") else m["started_at"])
     end = ts(m.get("workload_ended_at") or m.get("ready_at") or m["started_at"]) + (0 if m.get("workload_ended_at") else 900)
-    ids = search(a.store, m["run_id"], start - 5, end + 60, a.limit)
+    # traces that start after the workload are teardown noise (NFs already gone, e.g. SMF -> AMF
+    # "connection refused"), so the window ends at the workload end
+    ids = search(a.store, m["run_id"], start - 5, end + 5, a.limit)
     print(f"run {m['run_id']}: {len(ids)} traces sampled ({a.phase} window {start}..{end})")
     with ThreadPoolExecutor(16) as ex:
         shapes = list(ex.map(lambda i: shape(get(f"http://{a.store}:3200/api/traces/{i}")), ids))

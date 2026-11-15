@@ -230,4 +230,36 @@ timer, still starts a new trace. (3) The two runs are not performance baselines 
 patch and per-gNB TACs of 2026-09-28, ~25–35 % of AN releases, registrations and PDU releases time
 out in the driver (`fix-psi-tac2`, `e2e-1`, `e2e-2`; 0 % in `m1b-final`). The SMF logs ten
 `Send SMContext Status Notification Problem … 500` from the AMF (the patched path) and the AMF
-aborts paging after 4 × T3513 for 7 UEs (tracking areas). Bisect pending.
+aborts paging after 4 × T3513 for 7 UEs (tracking areas). Resolved 2026-11-15, see below.
+
+## Regression bisect (2026-11-15): the duplicate-PSI patch is the cause
+
+Two runs, 3 gNBs × 50 UEs, 180 s, seed 7, on AC power, each changing one of the two suspects:
+
+| procedure (failed / n) | `bisect-b-tacs1`: shared TAC 1, PSI patch in | `bisect-a-nopsi`: per-gNB TACs, PSI patch out | `e2e-2` | `m1b-final` |
+|---|---|---|---|---|
+| an_release | 14/45 | **0/45** | 12/41 | 0/45 |
+| initial_registration | 10/18 | **0/18** | 7/18 | 0/18 |
+| pdu_session_release | 12/29 | **0/30** | 11/28 | 0/29 |
+| pdu_session_establishment | 5/17 | **0/30** | 4/17 | 0/29 |
+| ping loss | 2.8 % | **0.0 %** | | 0 % |
+
+Per-gNB TACs are innocent; `tb --tacs N` (new flag, recorded as `ran.tacs` in the manifest) keeps
+both layouts available, default one TAC per gNB. With the patch removed, the AMF authentication
+and paging aborts, NAS MAC failures and SMF SBI timeouts of `bisect-b-tacs1` all disappear. The
+SMF `Unexpected state InActivePending/Active` WARNs (~90–120 per run) occur with and without the
+patch: baseline noise. Likely mechanism (not verified): the patch called `gmm.CreatePDUSession`
+inside the SMF's `SmContextStatusNotify` HTTP handler, i.e. it called back into the SMF while the
+SMF was waiting for its notify to be answered.
+
+**Decision: the patch is dropped** (`patches/applied/amf.diff` regenerated without it;
+`patches/amf-duplicate-psi-reprocess.patch` is kept for reference only). The T3580
+re-establishment race is back and is documented baseline behaviour: 8/30 re-establishments
+(27 %) in `bisect-a-nopsi`, all of which succeed after the ~16 s retry.
+
+**Traces are unaffected.** `trace_shape.py` first reported 21 % single-span SMF roots for
+`bisect-a-nopsi`. All of them were SMF → AMF `n1-n2-messages` calls failing with `connection
+refused` 10–20 s *after* the workload, during teardown (AMF already gone). The script's window
+now ends at the workload end (it used to extend 60 s past it). Within the workload window:
+100 % single root, 0 % orphan spans, 0 % SBI-client roots, 31.5 % of traces span ≥ 3 services
+(`bisect-b-tacs1`: 99.2 %, 1.6 %, 2.3 %; its leftovers are the patch's own failures).

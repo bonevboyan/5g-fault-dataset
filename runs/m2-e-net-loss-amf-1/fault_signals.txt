@@ -1,0 +1,13 @@
+run m2-e-net-loss-amf-1: fault E-net-loss-amf on amf, injected at bin 0, target working again after 60.1s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     14     26     21     27     19     29     30     27     17     22     21
+k8s: events on amf                     0      0      0      0      0      0      9      0      3      2      1      8
+metrics: amf CPU (cores)            0.05   0.05   0.04   0.01   0.01   0.01   0.01   0.01   0.01   0.01   0.01   0.01
+metrics: amf memory (MiB)           25.4   25.4   26.9   27.4   27.4   26.5   27.8   27.8   24.5   24.5   26.3   26.3
+traces: traces with error spans        0      0      1      1      1      1      2      1      1      0      1      0
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     549.5  476.7  293.7  549.2  504.9  251.6  871.5  816.4  543.0  526.2  646.9  536.7
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.43   0.52   0.40   0.38   0.50   0.44   0.65   0.30   0.38   0.36   0.43   0.28

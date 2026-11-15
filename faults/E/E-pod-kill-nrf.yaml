@@ -1,0 +1,26 @@
+id: E-pod-kill-nrf
+level: E
+class: pod_kill
+title: NRF process crash
+description: >-
+  The NRF (service registry) pod is killed once. NFs that already cached peer addresses keep working;
+  new discoveries and OAuth token requests fail until the new NRF is up and the NFs re-register.
+target:
+  nf: nrf
+schedule:
+  onset_s: 60
+  duration_s: 0
+  observe_s: 120
+  recovery_log: SBI server started
+magnitude: {}
+expected:
+  first_affected: nrf
+  procedures:
+  - initial_registration
+  - pdu_session_establishment
+inject:
+  chaos:
+    kind: PodChaos
+    spec:
+      action: pod-kill
+      mode: one

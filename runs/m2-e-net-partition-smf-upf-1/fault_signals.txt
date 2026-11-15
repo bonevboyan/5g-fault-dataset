@@ -1,0 +1,13 @@
+run m2-e-net-partition-smf-upf-1: fault E-net-partition-smf-upf on smf, injected at bin 0, target working again after 30.1s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       10     21     28     21     26     10    494   1802   1617     43     29     32
+k8s: events on smf                     0      0      0      0      0      0     10      0      8      2      0      0
+metrics: smf CPU (cores)            0.08   0.07   0.07   0.05   0.02   0.01   0.02   0.03   0.03   0.04   0.05   0.04
+metrics: smf memory (MiB)           35.0   36.4   38.6   38.6   41.7   41.7   44.5   40.0   40.0   40.1   40.1   40.7
+traces: traces with error spans        0      1      0      1      0      0      6      8      6      0      1      1
+ue: failed procedures                  0      0      0      0      0      0      2      1      2      4      3      0
+ue: procedure latency p50 (ms)     708.2  460.9  294.8  501.4  463.0  339.5  597.2  542.5  810.3  531.7  572.2  447.0
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    1.1    1.6    2.1    1.1
+ue: ping RTT p50 (ms)               0.36   0.50   0.40   0.50   0.43   0.28   0.64   0.31   0.35   0.48   0.37   0.82

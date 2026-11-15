@@ -1,0 +1,37 @@
+id: E-net-partition-smf-upf
+level: E
+class: network_partition
+title: Network cut between SMF and UPF (N4)
+description: >-
+  All traffic between the SMF and the UPF is blocked in both directions for 30 s. Existing data paths
+  keep forwarding, but no session can be created, modified or released, and PFCP heartbeats fail.
+target:
+  nf: smf
+schedule:
+  onset_s: 60
+  duration_s: 30
+  observe_s: 60
+magnitude:
+  peer: upf
+  direction: both
+expected:
+  first_affected: smf
+  procedures:
+  - pdu_session_establishment
+  - pdu_session_release
+  - service_request_mo
+  - service_request_mt_paging
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: partition
+      mode: all
+      direction: both
+      target:
+        mode: all
+        selector:
+          namespaces:
+          - f5g
+          labelSelectors:
+            app: upf

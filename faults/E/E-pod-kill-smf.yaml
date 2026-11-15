@@ -1,0 +1,25 @@
+id: E-pod-kill-smf
+level: E
+class: pod_kill
+title: SMF process crash
+description: >
+  The SMF pod is killed once and Kubernetes starts a new one. The new SMF has lost every session
+  context, has to re-register with the NRF and re-associate with the UPF over PFCP. Simulates an
+  NF crash, the most common operational fault in microservice RCA datasets.
+target:
+  nf: smf
+schedule:
+  onset_s: 60
+  duration_s: 0
+  observe_s: 120
+  recovery_log: PFCP Association Setup Accepted Response   # new SMF is attached to the UPF again
+magnitude: {}
+expected:
+  first_affected: smf
+  procedures: [pdu_session_establishment, pdu_session_release, service_request_mt_paging]
+inject:
+  chaos:
+    kind: PodChaos
+    spec:
+      action: pod-kill
+      mode: one

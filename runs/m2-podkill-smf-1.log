@@ -1,0 +1,64 @@
+[18:00:54] run m2-podkill-smf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[18:00:54]   gate ok   gtp5g loaded (0.0s)
+[18:00:54]   gate ok   storage tier reachable (0.02s)
+[18:00:55]   gate ok   cluster roles Ready (0.04s)
+[18:00:55] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[18:00:58]   gate ok   otel-gateway Ready (2.1s)
+[18:00:58]   gate ok   logs + metrics reach storage (0.18s)
+[18:00:58] stage 1: mongo
+[18:01:00]   gate ok   mongo Ready (2.1s)
+[18:01:00] stage 2: NRF
+[18:01:03]   gate ok   nrf SBI up (https) (3.2s)
+[18:01:03] stage 3: UPF
+[18:01:10]   gate ok   upf started (6.36s)
+[18:01:10] stage 4: control-plane NFs + webconsole (AF)
+[18:01:13]   gate ok   all NF types registered in NRF (2.23s)
+[18:01:13]   gate ok   smf<->upf PFCP association (0.05s)
+[18:01:13]   gate ok   amf Ready (0.05s)
+[18:01:13]   gate ok   ausf Ready (0.04s)
+[18:01:13]   gate ok   udm Ready (0.05s)
+[18:01:13]   gate ok   udr Ready (0.04s)
+[18:01:13]   gate ok   pcf Ready (0.04s)
+[18:01:13]   gate ok   nssf Ready (0.04s)
+[18:01:13]   gate ok   smf Ready (0.05s)
+[18:01:13]   gate ok   chf Ready (0.04s)
+[18:01:13]   gate ok   webui Ready (0.06s)
+[18:01:13]   gate ok   traces reach storage (0.01s)
+[18:01:13] stage 5: 150 subscribers
+[18:01:15]   gate ok   webui port-forward (1.2s)
+[18:01:16]   gate ok   150 subscribers provisioned
+[18:01:16] stage 6: 3 gNBs
+[18:01:17]   gate ok   gnb-0 NG Setup (1.11s)
+[18:01:17]   gate ok   gnb-1 NG Setup (0.05s)
+[18:01:18]   gate ok   gnb-2 NG Setup (0.04s)
+[18:01:18] stage 7: 150 UEs
+[18:01:56]   gate ok   150 UEs registered + PDU sessions with TUN (22.18s)
+[18:01:56]   gate ok   no pod restarts during bring-up (0.05s)
+[18:01:56] READY  run=m2-podkill-smf-1  dir=../runs/m2-podkill-smf-1  (TUN repairs: 3)
+[18:01:56]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-podkill-smf-1/workload
+[18:02:56] fault E-pod-kill-smf: injected (PodChaos e-pod-kill-smf-m2-podkill-smf-1)
+[18:02:58] fault E-pod-kill-smf: target Ready again after 1.7s
+pings: 3050  loss: 9.21%  rtt p50: 0.39 ms   (+53 first-after-wake probes, 18 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=2
+an_release                           n=42   ok=41   aborted=0  t3580=0  p50=559 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=788 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=294 ms
+pdu_session_establishment            n=20   ok=19   aborted=1  t3580=5  p50=820 ms
+pdu_session_establishment_initial    n=18   ok=18   aborted=0  t3580=0  p50=468 ms
+pdu_session_release                  n=25   ok=20   aborted=0  t3580=0  p50=207 ms
+service_request_mo                   n=15   ok=13   aborted=1  t3580=0  p50=232 ms
+service_request_mt_paging            n=21   ok=14   aborted=0  t3580=0  p50=114 ms
+[18:04:57] labels: E-pod-kill-smf injected=yes recovered=1.7s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           41    41      559ms      4ms      6ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    17      788ms     16ms    141ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      294ms     26ms    198ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            19    19      820ms     39ms  16589ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    18    18      468ms    315ms    324ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  20    20      207ms     18ms     41ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   13    11      232ms      4ms     23ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            14     9      114ms     21ms     26ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 5/19 (driver heuristic: 5), AMF duplicate-PSI drops 5, release-end->request gap p50 444 ms
+[18:05:11] deleting testbed namespaces
+[18:05:47] run m2-podkill-smf-1: done

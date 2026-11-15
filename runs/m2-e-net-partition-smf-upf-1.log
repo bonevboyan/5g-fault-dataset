@@ -1,0 +1,65 @@
+[18:44:59] run m2-e-net-partition-smf-upf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[18:44:59]   gate ok   gtp5g loaded (0.0s)
+[18:44:59]   gate ok   storage tier reachable (0.02s)
+[18:44:59]   gate ok   cluster roles Ready (0.04s)
+[18:45:00] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[18:45:02]   gate ok   otel-gateway Ready (2.1s)
+[18:45:08]   gate ok   logs + metrics reach storage (6.04s)
+[18:45:08] stage 1: mongo
+[18:45:10]   gate ok   mongo Ready (2.1s)
+[18:45:10] stage 2: NRF
+[18:45:12]   gate ok   nrf SBI up (https) (1.11s)
+[18:45:12] stage 3: UPF
+[18:45:18]   gate ok   upf started (6.4s)
+[18:45:18] stage 4: control-plane NFs + webconsole (AF)
+[18:45:21]   gate ok   all NF types registered in NRF (2.24s)
+[18:45:21]   gate ok   smf<->upf PFCP association (0.04s)
+[18:45:21]   gate ok   amf Ready (0.1s)
+[18:45:21]   gate ok   ausf Ready (0.04s)
+[18:45:21]   gate ok   udm Ready (0.04s)
+[18:45:22]   gate ok   udr Ready (0.04s)
+[18:45:22]   gate ok   pcf Ready (0.04s)
+[18:45:22]   gate ok   nssf Ready (0.04s)
+[18:45:22]   gate ok   smf Ready (0.04s)
+[18:45:22]   gate ok   chf Ready (0.03s)
+[18:45:22]   gate ok   webui Ready (0.04s)
+[18:45:22]   gate ok   traces reach storage (0.01s)
+[18:45:22] stage 5: 150 subscribers
+[18:45:23]   gate ok   webui port-forward (1.19s)
+[18:45:24]   gate ok   150 subscribers provisioned
+[18:45:24] stage 6: 3 gNBs
+[18:45:26]   gate ok   gnb-0 NG Setup (1.11s)
+[18:45:26]   gate ok   gnb-1 NG Setup (0.05s)
+[18:45:26]   gate ok   gnb-2 NG Setup (0.05s)
+[18:45:26] stage 7: 150 UEs
+[18:45:47]   gate ok   150 UEs registered + PDU sessions with TUN (5.22s)
+[18:45:47]   gate ok   no pod restarts during bring-up (0.05s)
+[18:45:47] READY  run=m2-e-net-partition-smf-upf-1  dir=../runs/m2-e-net-partition-smf-upf-1  (TUN repairs: 1)
+[18:45:47]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-e-net-partition-smf-upf-1/workload
+[18:46:47] fault E-net-partition-smf-upf: injected (NetworkChaos e-net-partition-smf-upf-m2-e-net-partition-smf-upf-1)
+[18:47:17] fault E-net-partition-smf-upf: removed after 30s
+[18:47:17] fault E-net-partition-smf-upf: target Ready again after 0.0s
+pings: 4078  loss: 0.61%  rtt p50: 0.43 ms   (+69 first-after-wake probes, 32 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=2
+an_release                           n=44   ok=44   aborted=0  t3580=0  p50=545 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=795 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=291 ms
+pdu_session_establishment            n=29   ok=24   aborted=0  t3580=9  p50=829 ms
+pdu_session_establishment_initial    n=18   ok=17   aborted=0  t3580=0  p50=465 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=208 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=219 ms
+service_request_mt_paging            n=23   ok=17   aborted=0  t3580=0  p50=108 ms
+[18:48:48] labels: E-net-partition-smf-upf injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           44    44      545ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      795ms     18ms     37ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      291ms     24ms    152ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            24    24      829ms    234ms  16851ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    17    17      465ms    313ms  12135ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      208ms     18ms  16028ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      219ms      4ms    144ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            17    17      108ms      3ms     23ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 9/24 (driver heuristic: 9), AMF duplicate-PSI drops 9, release-end->request gap p50 279 ms
+[18:48:54] deleting testbed namespaces
+[18:49:31] run m2-e-net-partition-smf-upf-1: done

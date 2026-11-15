@@ -1,0 +1,30 @@
+id: E-pod-kill-amf
+level: E
+class: pod_kill
+title: AMF process crash
+description: >-
+  The AMF pod is killed once. Every gNB's NGAP (SCTP) association and every UE context is lost; the new
+  AMF only serves traffic again once the gNBs redo NG Setup. Whether UERANSIM gNBs reconnect on their
+  own is part of what the run shows.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 0
+  observe_s: 120
+  recovery_log: Send NG-Setup response
+magnitude: {}
+expected:
+  first_affected: amf
+  procedures:
+  - initial_registration
+  - service_request_mo
+  - service_request_mt_paging
+  - pdu_session_establishment
+  - an_release
+inject:
+  chaos:
+    kind: PodChaos
+    spec:
+      action: pod-kill
+      mode: one

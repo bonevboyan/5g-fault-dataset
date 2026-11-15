@@ -1,0 +1,13 @@
+run m2-e-pod-kill-udm-1: fault E-pod-kill-udm on udm, injected at bin 0, target working again after 1.7s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     15     29     21     24     19     31     30     31     25     17     21
+k8s: events on udm                     0      0      0      0      0      1     17      0      0      0      0      0
+metrics: udm CPU (cores)            0.04   0.03   0.03   0.00   0.00   0.00   0.00   0.00   0.00   0.00   0.00   0.01
+metrics: udm memory (MiB)           18.3   20.8   20.2   20.2   21.6   21.6    3.6   13.0   16.2   16.2   16.2   17.0
+traces: traces with error spans        0      1      1      1      1      0      5      1      1      1      1      1
+ue: failed procedures                  0      0      0      0      0      1      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     536.8  450.6  493.9  510.9  539.6  337.7  538.5  512.9  525.8  457.9  513.9  473.9
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.41   0.47   0.40   0.43   0.49   0.37   0.62   0.32   0.35   0.52   0.47   0.48

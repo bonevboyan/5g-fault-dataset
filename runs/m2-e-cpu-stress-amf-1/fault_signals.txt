@@ -1,0 +1,13 @@
+run m2-e-cpu-stress-amf-1: fault E-cpu-stress-amf on amf, injected at bin 0, target working again after 60.1s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     14     25     20     23     10     29     23     21     27     18     20
+k8s: events on amf                     0      0      0      0      0      0      6      0      0      0      0      4
+metrics: amf CPU (cores)            0.06   0.05   0.05   0.01   0.01   0.01   0.01   1.18   1.51   2.43   3.37   3.39
+metrics: amf memory (MiB)           25.3   26.7   23.3   23.3   25.7   26.2   26.2   32.1   32.1   32.1   32.8   32.3
+traces: traces with error spans        0      0      0      0      0      0      0      0      1      1      0      0
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     536.5  458.7  446.8  461.2  495.5  412.8  490.6  502.1  500.4  491.2  597.6  503.0
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.44   0.59   0.44   0.40   0.47   0.56   0.42   0.50   0.96   0.52   0.50   0.62

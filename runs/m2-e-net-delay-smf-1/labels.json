@@ -1,0 +1,87 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-net-delay-smf-1",
+  "workload": {
+    "start_ns": 1794763843394072967,
+    "end_ns": 1794764023850573724
+  },
+  "fault": {
+    "id": "E-net-delay-smf",
+    "level": "E",
+    "class": "network_delay",
+    "title": "200 ms extra latency on all SMF traffic",
+    "magnitude": {
+      "latency_ms": 200,
+      "jitter_ms": 20
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 60
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment",
+        "pdu_session_release",
+        "service_request_mt_paging"
+      ]
+    },
+    "target": {
+      "nf": "smf",
+      "pods": [
+        {
+          "name": "smf-66888bb8f9-2cxlz",
+          "uid": "38e234f4-460e-45d0-a94b-4405ea257dd5",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "smf-66888bb8f9-2cxlz",
+          "uid": "38e234f4-460e-45d0-a94b-4405ea257dd5",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794763903545075148,
+    "removed_ns": 1794763963586393909,
+    "recovered_ns": 1794763963622012535,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "NetworkChaos",
+        "metadata": {
+          "name": "e-net-delay-smf-m2-e-net-delay-smf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-net-delay-smf-1",
+            "f5g/fault": "E-net-delay-smf"
+          }
+        },
+        "spec": {
+          "action": "delay",
+          "mode": "all",
+          "direction": "to",
+          "delay": {
+            "latency": "200ms",
+            "jitter": "20ms",
+            "correlation": "0"
+          },
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "smf"
+            }
+          },
+          "duration": "60s"
+        }
+      },
+      "events": [],
+      "error": null
+    }
+  }
+}

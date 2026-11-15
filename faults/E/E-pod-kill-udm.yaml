@@ -1,0 +1,26 @@
+id: E-pod-kill-udm
+level: E
+class: pod_kill
+title: UDM process crash
+description: >-
+  The UDM (subscriber data) pod is killed once. Only procedures that need subscriber data or authentication
+  vectors (registration, PDU session setup) are hit; established sessions are not.
+target:
+  nf: udm
+schedule:
+  onset_s: 60
+  duration_s: 0
+  observe_s: 120
+  recovery_log: Start SBI server
+magnitude: {}
+expected:
+  first_affected: udm
+  procedures:
+  - initial_registration
+  - pdu_session_establishment
+inject:
+  chaos:
+    kind: PodChaos
+    spec:
+      action: pod-kill
+      mode: one

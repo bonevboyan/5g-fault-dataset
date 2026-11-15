@@ -1,0 +1,65 @@
+[18:25:07] run m2-e-mem-stress-smf-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[18:25:07]   gate ok   gtp5g loaded (0.0s)
+[18:25:07]   gate ok   storage tier reachable (0.02s)
+[18:25:07]   gate ok   cluster roles Ready (0.05s)
+[18:25:08] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[18:25:13]   gate ok   otel-gateway Ready (4.14s)
+[18:25:19]   gate ok   logs + metrics reach storage (6.03s)
+[18:25:19] stage 1: mongo
+[18:25:21]   gate ok   mongo Ready (2.08s)
+[18:25:21] stage 2: NRF
+[18:25:23]   gate ok   nrf SBI up (https) (2.16s)
+[18:25:23] stage 3: UPF
+[18:25:30]   gate ok   upf started (6.39s)
+[18:25:30] stage 4: control-plane NFs + webconsole (AF)
+[18:25:33]   gate ok   all NF types registered in NRF (2.24s)
+[18:25:33]   gate ok   smf<->upf PFCP association (0.04s)
+[18:25:33]   gate ok   amf Ready (0.03s)
+[18:25:33]   gate ok   ausf Ready (0.04s)
+[18:25:33]   gate ok   udm Ready (0.03s)
+[18:25:33]   gate ok   udr Ready (0.04s)
+[18:25:33]   gate ok   pcf Ready (0.03s)
+[18:25:36]   gate ok   nssf Ready (3.18s)
+[18:25:36]   gate ok   smf Ready (0.04s)
+[18:25:36]   gate ok   chf Ready (0.04s)
+[18:25:36]   gate ok   webui Ready (0.04s)
+[18:25:42]   gate ok   traces reach storage (6.07s)
+[18:25:42] stage 5: 150 subscribers
+[18:25:44]   gate ok   webui port-forward (1.2s)
+[18:25:45]   gate ok   150 subscribers provisioned
+[18:25:45] stage 6: 3 gNBs
+[18:25:46]   gate ok   gnb-0 NG Setup (1.11s)
+[18:25:47]   gate ok   gnb-1 NG Setup (0.06s)
+[18:25:47]   gate ok   gnb-2 NG Setup (0.05s)
+[18:25:47] stage 7: 150 UEs
+[18:26:05]   gate ok   150 UEs registered + PDU sessions with TUN (3.05s)
+[18:26:05]   gate ok   no pod restarts during bring-up (0.05s)
+[18:26:05] READY  run=m2-e-mem-stress-smf-1  dir=../runs/m2-e-mem-stress-smf-1  (TUN repairs: 3)
+[18:26:06]   gate ok   chaos-mesh Ready (tb chaos-up) (0.03s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-e-mem-stress-smf-1/workload
+[18:27:06] fault E-mem-stress-smf: injected (StressChaos e-mem-stress-smf-m2-e-mem-stress-smf-1)
+[18:28:06] fault E-mem-stress-smf: removed after 60s
+[18:28:06] fault E-mem-stress-smf: target Ready again after 0.0s
+pings: 4323  loss: 0.00%  rtt p50: 0.42 ms   (+77 first-after-wake probes, 34 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=535 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=777 ms
+initial_registration                 n=18   ok=17   aborted=0  t3580=0  p50=290 ms
+pdu_session_establishment            n=30   ok=29   aborted=1  t3580=9  p50=1174 ms
+pdu_session_establishment_initial    n=17   ok=17   aborted=0  t3580=0  p50=461 ms
+pdu_session_release                  n=30   ok=30   aborted=0  t3580=0  p50=203 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=206 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=114 ms
+[18:29:06] labels: E-mem-stress-smf injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45      535ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      777ms     17ms     35ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 17    17      290ms     24ms     26ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            29    29     1174ms    145ms  16551ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    17    17      461ms    312ms    318ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  30    30      203ms     17ms    139ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      206ms      4ms    205ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    23      114ms      3ms     25ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 9/29 (driver heuristic: 9), AMF duplicate-PSI drops 9, release-end->request gap p50 505 ms
+[18:29:11] deleting testbed namespaces
+[18:29:48] run m2-e-mem-stress-smf-1: done

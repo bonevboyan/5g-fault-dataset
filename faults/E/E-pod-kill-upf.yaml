@@ -1,0 +1,27 @@
+id: E-pod-kill-upf
+level: E
+class: pod_kill
+title: UPF process crash
+description: >-
+  The UPF (user-plane forwarder) pod is killed once. All GTP-U tunnels and PFCP sessions are gone, so
+  every UE loses its data path; the SMF must re-associate over PFCP.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 0
+  observe_s: 120
+  recovery_log: UPF started
+magnitude: {}
+expected:
+  first_affected: upf
+  procedures:
+  - pdu_session_establishment
+  - service_request_mo
+  - service_request_mt_paging
+inject:
+  chaos:
+    kind: PodChaos
+    spec:
+      action: pod-kill
+      mode: one

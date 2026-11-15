@@ -1,0 +1,32 @@
+id: E-cpu-stress-amf
+level: E
+class: cpu_stress
+title: CPU saturation on the AMF
+description: >-
+  Four CPU-burning workers run inside the AMF container for 60 s, competing with the AMF and every other
+  core NF for the core node's 6 CPUs. Expect slower NAS/NGAP handling, not failures.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  workers: 4
+  load_pct: 100
+expected:
+  first_affected: amf
+  procedures:
+  - initial_registration
+  - service_request_mo
+  - service_request_mt_paging
+  - an_release
+inject:
+  chaos:
+    kind: StressChaos
+    spec:
+      mode: one
+      stressors:
+        cpu:
+          workers: 4
+          load: 100

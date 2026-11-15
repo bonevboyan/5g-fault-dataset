@@ -1,0 +1,22 @@
+# Helm values for Chaos Mesh (level-E fault injection), installed by `tb chaos-up`.
+# Images are imported into the nodes by `tb` (the k3d nodes have no registry access), so never pull.
+# The controller runs on the telemetry node, off the core's cpuset; the per-node daemon (which
+# performs network/stress/kill actions inside target pods) runs only where targets live: core + ran.
+controllerManager:
+  replicaCount: 1
+  imagePullPolicy: Never
+  nodeSelector: {role: telemetry}
+chaosDaemon:
+  runtime: containerd
+  socketPath: /run/k3s/containerd/containerd.sock
+  imagePullPolicy: Never
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - {key: role, operator: In, values: [core, ran]}
+dashboard:
+  create: false
+dnsServer:
+  create: false

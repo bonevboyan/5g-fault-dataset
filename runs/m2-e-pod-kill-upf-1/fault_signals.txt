@@ -1,0 +1,13 @@
+run m2-e-pod-kill-upf-1: fault E-pod-kill-upf on upf, injected at bin 0, target working again after 1.2s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       10     20     26     21     27     19     26     66     47     47     53     49
+k8s: events on upf                     0      0      0      0      0      0     21      0      0      0      0      0
+metrics: upf CPU (cores)            0.01   0.02   0.02   0.02   0.01   0.01   0.01   0.01   0.01   0.01   0.00   0.00
+metrics: upf memory (MiB)           11.3   11.3   11.3   11.2   11.8   11.8   12.3    6.1    7.1    7.1    7.1    7.1
+traces: traces with error spans        0      0      1      1      1      0      5     15     13     11     14     17
+ue: failed procedures                  0      0      0      0      0      0      3      3      4      5      2      4
+ue: procedure latency p50 (ms)     703.9  459.6  374.7  563.1  516.5  342.1  885.1  627.7  688.1  813.5  743.3 3001.5
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0  100.0  100.0      0  100.0  100.0
+ue: ping RTT p50 (ms)               0.42   0.50   0.44   0.39   0.43   0.41   0.54      0      0      0      0      0

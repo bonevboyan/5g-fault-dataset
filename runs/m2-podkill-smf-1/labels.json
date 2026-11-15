@@ -1,0 +1,85 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-podkill-smf-1",
+  "workload": {
+    "start_ns": 1794762116335833833,
+    "end_ns": 1794762297269894324
+  },
+  "fault": {
+    "id": "E-pod-kill-smf",
+    "level": "E",
+    "class": "pod_kill",
+    "title": "SMF process crash",
+    "magnitude": {},
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 0,
+      "observe_s": 120,
+      "recovery_log": "PFCP Association Setup Accepted Response"
+    },
+    "expected": {
+      "first_affected": "smf",
+      "procedures": [
+        "pdu_session_establishment",
+        "pdu_session_release",
+        "service_request_mt_paging"
+      ]
+    },
+    "target": {
+      "nf": "smf",
+      "pods": [
+        {
+          "name": "smf-66888bb8f9-nk24q",
+          "uid": "c31fe7ad-dd11-45af-9be9-58faf94a94ff",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "smf-66888bb8f9-hqp8g",
+          "uid": "ba9f3045-b78c-4c7e-98df-b23adea3455d",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794762176489075952,
+    "removed_ns": 1794762176489075952,
+    "recovered_ns": 1794762178237214593,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "PodChaos",
+        "metadata": {
+          "name": "e-pod-kill-smf-m2-podkill-smf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-podkill-smf-1",
+            "f5g/fault": "E-pod-kill-smf"
+          }
+        },
+        "spec": {
+          "action": "pod-kill",
+          "mode": "one",
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "smf"
+            }
+          }
+        }
+      },
+      "events": [
+        {
+          "target": "f5g/smf-66888bb8f9-nk24q",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T17:02:56Z",
+          "type": "Succeeded"
+        }
+      ],
+      "error": null
+    }
+  }
+}

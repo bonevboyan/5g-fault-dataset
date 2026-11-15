@@ -1,0 +1,81 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-e-pod-kill-amf-1",
+  "workload": {
+    "start_ns": 1794765021990420420,
+    "end_ns": 1794765203443879795
+  },
+  "fault": {
+    "id": "E-pod-kill-amf",
+    "level": "E",
+    "class": "pod_kill",
+    "title": "AMF process crash",
+    "magnitude": {},
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 0,
+      "observe_s": 120,
+      "recovery_log": "Send NG-Setup response"
+    },
+    "expected": {
+      "first_affected": "amf",
+      "procedures": [
+        "initial_registration",
+        "service_request_mo",
+        "service_request_mt_paging",
+        "pdu_session_establishment",
+        "an_release"
+      ]
+    },
+    "target": {
+      "nf": "amf",
+      "pods": [
+        {
+          "name": "amf-5c56865846-kmhgf",
+          "uid": "4a29e97e-48fe-4577-b121-64c3934ed075",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": []
+    },
+    "injected_ns": 1794765082142026955,
+    "removed_ns": 1794765082142026955,
+    "recovered_ns": null,
+    "injector": {
+      "kind": "chaos-mesh",
+      "object": {
+        "apiVersion": "chaos-mesh.org/v1alpha1",
+        "kind": "PodChaos",
+        "metadata": {
+          "name": "e-pod-kill-amf-m2-e-pod-kill-amf-1",
+          "namespace": "f5g",
+          "labels": {
+            "f5g/run": "m2-e-pod-kill-amf-1",
+            "f5g/fault": "E-pod-kill-amf"
+          }
+        },
+        "spec": {
+          "action": "pod-kill",
+          "mode": "one",
+          "selector": {
+            "namespaces": [
+              "f5g"
+            ],
+            "labelSelectors": {
+              "app": "amf"
+            }
+          }
+        }
+      },
+      "events": [
+        {
+          "target": "f5g/amf-5c56865846-kmhgf",
+          "operation": "Apply",
+          "timestamp": "2026-11-15T17:51:22Z",
+          "type": "Succeeded"
+        }
+      ],
+      "error": null
+    }
+  }
+}

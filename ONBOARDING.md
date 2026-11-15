@@ -158,6 +158,11 @@ AMF duplicate-PSI patch was the cause, not the per-gNB TACs. The patch is droppe
 0 % orphans). Details: `docs/M1b-findings.md`, "Regression bisect". `tb --tacs N` selects the
 tracking-area layout (default one TAC per gNB).
 
+**M2 in progress (2026-11-15).** Scope decided: levels E + D, 10 runs per fault, Open5GS as
+future work. Done: recipe format and labels (`faults/README.md`), `tb run --fault`, Chaos Mesh
+(`tb chaos-up`), the per-fault signal check (`analysis/fault_signals.py`), and 12 level-E
+recipes validated once each (`docs/M2-findings.md`). Next: level-D recipes, then batch runs.
+
 **Then M2: the fault library.** Config-as-data fault definitions (`faults/`), one per catalogue
 entry for levels E, A/B and D; a label schema (fault class, target NF, injection start/stop,
 magnitude, expected first-affected layer/NF); temporal boundaries aligned to the workload's

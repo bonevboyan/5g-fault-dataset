@@ -1,0 +1,13 @@
+run m2-e-mem-stress-smf-1: fault E-mem-stress-smf on smf, injected at bin 0, target working again after 60.1s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     15     29     20     27     16     28     26     23     23     16     21
+k8s: events on smf                     0      0      0      0      0      0      6      0      0      0      0      4
+metrics: smf CPU (cores)            0.06   0.06   0.06   0.08   0.07   0.02   0.02   0.02   0.02   0.02   0.02   0.02
+metrics: smf memory (MiB)           36.2   37.0   37.2   37.2   39.9   39.7   41.5 1068.8 1068.8 1069.4 1070.7 1070.7
+traces: traces with error spans        0      1      1      0      1      0      2      0      0      0      1      1
+ue: failed procedures                  0      0      0      0      0      0      0      1      0      0      0      0
+ue: procedure latency p50 (ms)     525.3  473.5  443.1  498.3  541.1  345.7  500.7  527.0  536.4  462.3  536.5  459.1
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.38   0.54   0.39   0.53   0.56   0.40   0.66   0.30   0.45   0.44   0.73   0.31

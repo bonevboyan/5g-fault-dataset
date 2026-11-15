@@ -1,0 +1,39 @@
+id: E-net-delay-n3
+level: E
+class: network_delay
+title: 50 ms extra latency on downlink user-plane traffic (UPF to gNBs)
+description: >-
+  Packets the UPF sends to the gNBs (GTP-U on N3: downlink user data) are delayed by 50 ms for 60 s. PFCP
+  between SMF and UPF is untouched, so this is a pure user-plane fault: UE round-trip times rise, the
+  control plane should be unaffected.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  latency_ms: 50
+  jitter_ms: 5
+  peer: gnbs
+expected:
+  first_affected: upf
+  procedures: []
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: delay
+      mode: all
+      direction: to
+      delay:
+        latency: 50ms
+        jitter: 5ms
+        correlation: '0'
+      target:
+        mode: all
+        selector:
+          namespaces:
+          - f5g
+          labelSelectors:
+            tier: ran

@@ -1,0 +1,26 @@
+id: B-pfcp-malformed-flood
+level: B
+class: pfcp_flood
+title: Malformed PFCP flood on the UPF's N4
+description: >-
+  Every gNB pod blasts the UPF's N4 (PFCP, 8805/UDP) with malformed PFCP messages (a valid header
+  advertising a long body, then only a few garbage bytes). The UPF rejects each one on its PFCP
+  error path ("unexpected EOF"), so the surge floods the UPF with parse errors. Models a PFCP
+  fuzz/abuse flood (catalogue B). On revert the flooder is killed.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  rate: 2000
+  kind: malformed
+  arrival: flood
+expected:
+  first_affected: upf
+  procedures: [pdu_session_establishment]
+inject:
+  steps:
+    apply:  [{pfcp_flood: &f {kind: malformed, rate: 2000}}]
+    revert: [{pfcp_flood_stop: *f}]

@@ -141,3 +141,42 @@ completes only about one pass over the 50 UEs in 60 s — a burst rather than a 
 
 **Scope:** level A here is the registration/paging slice of catalogue A1/A3. Its signalling-flood
 character is captured by these three; heavier floods and the packet-level storms are future work.
+
+## Level-B recipes (PFCP / N4 floods), one validation run each (2026-11-16)
+
+Level B abuses the control protocol between the SMF and the UPF, PFCP on N4 (UDP/8805). A new
+`pfcp_flood` injector (`testbed/faults.py` + `testbed/pfcp_flood.py`) blasts the UPF's N4 port with
+hand-built PFCP messages, as a rogue or overloading SMF would. Delivery note: no NF/gNB pod has
+python or nc, but the gNB pods have bash, so the packets (built stdlib-only) are sent from inside
+the cluster with bash's `/dev/udp`, spread over every gNB pod. The flood is **rate-limited**
+(`rate` packets/s per pod, default 2000 ≈ the bash send ceiling): an unpaced loop pegs a host CPU
+and skews the whole run. Same workload as the other levels (3 gNBs × 50 UEs, 180 s, seed 7), onset
+60 s, held 60 s, reverted. Runs `m2-b-pfcp-<recipe>-1`. User decision (2026-11-16): a hand-rolled
+flooder, not `pfcpsim` (which targets a different UPF and may not interoperate with free5GC).
+
+Encoding note worth recording: free5GC's UPF (go-pfcp) **rejects an IPv4 Node ID** in an
+Association Setup Request with "unexpected EOF", but **accepts an FQDN Node ID**. The association
+flood therefore sends a fresh FQDN (`rogueN.flood`) per packet, and each one registers a new peer.
+
+| recipe | what it sends | where it shows | effect on legitimate UEs |
+|---|---|---|---|
+| `B-pfcp-heartbeat-flood` | well-formed PFCP Heartbeat Requests | **metrics only**: UPF CPU 0.01 → ~0.15 cores; ERRO/WARN unchanged (heartbeats are handled silently) | none |
+| `B-pfcp-assoc-flood` | Association Setup, fresh FQDN Node ID each (new peer every time) | UPF CPU 0 → ~0.23 cores, ERRO/WARN 20 → ~400 (association churn), UPF memory 11 → 15 MiB | slight: brief ping-loss blips (≤1.6 %), latency within noise |
+| `B-pfcp-malformed-flood` | valid header, truncated/garbage body | **huge log flood**: ERRO/WARN 20 → **~54 000** per 10 s ("unexpected EOF"), sustained; UPF CPU ~0.10 cores | none |
+
+The three sit in three different modalities: the heartbeat flood is visible **only in metrics**
+(a stealthy flood — nothing in the error logs), the malformed flood is an **enormous error-log**
+signal with little else, and the association flood sits in between with a bit of everything plus
+real association state at the UPF.
+
+**Finding, reported as-is: like level A, the N4 floods are detectable but mostly benign on this
+hardware at a controlled rate.** The UPF has enough headroom that CPU rises only to a fraction of a
+core and legitimate UEs are essentially unaffected. An earlier *unpaced* run did drive the UPF CPU
+to ~1.7 cores and spiked legitimate UEs' latency, but it also pegged a host CPU and skewed the
+run's own clock (a 20-minute gap before injection, a 50-minute teardown), so that magnitude is an
+artifact of host starvation, not a clean measurement. A flood heavy enough to actually starve this
+UPF cannot be driven cleanly from one laptop; a high-rate, user-impacting N4 flood waits for more
+capacity (Gunship), together with level B's user-plane (GTP-U) half.
+
+**Scope:** level B here is the PFCP control-message slice. The GTP-U/user-plane abuse and a
+Chaos-Mesh N4 net-degradation baseline for contrast are future work.

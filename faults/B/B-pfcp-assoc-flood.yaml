@@ -1,0 +1,29 @@
+id: B-pfcp-assoc-flood
+level: B
+class: pfcp_flood
+title: PFCP association flood on the UPF's N4
+description: >-
+  Every gNB pod blasts the UPF's N4 (PFCP, 8805/UDP) with PFCP Association Setup Requests, each
+  carrying a fresh FQDN Node ID, as a rogue or misbehaving SMF would. Each request makes the UPF
+  register a new peer ("New node"), so the surge floods the UPF's N4 control path with
+  association state. Models a PFCP signalling flood (catalogue B). The flood comes from outside
+  the workload's UE records; the effect is read from the UPF and from the legitimate UEs' data
+  path. On revert the flooder is killed.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  rate: 2000
+  kind: assoc
+  distinct: 256
+  arrival: flood
+expected:
+  first_affected: upf
+  procedures: [pdu_session_establishment]
+inject:
+  steps:
+    apply:  [{pfcp_flood: &f {kind: assoc, rate: 2000, distinct: 256}}]
+    revert: [{pfcp_flood_stop: *f}]

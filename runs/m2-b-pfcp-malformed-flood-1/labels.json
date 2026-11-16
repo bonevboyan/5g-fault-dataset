@@ -1,0 +1,90 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-b-pfcp-malformed-flood-1",
+  "workload": {
+    "start_ns": 1794861666975842557,
+    "end_ns": 1794861847460190254
+  },
+  "fault": {
+    "id": "B-pfcp-malformed-flood",
+    "level": "B",
+    "class": "pfcp_flood",
+    "title": "Malformed PFCP flood on the UPF's N4",
+    "magnitude": {
+      "rate": 2000,
+      "kind": "malformed",
+      "arrival": "flood"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "upf",
+      "procedures": [
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "upf",
+      "pods": [
+        {
+          "name": "upf-7469d55486-sblp5",
+          "uid": "8e83a127-02ce-4702-9134-321f3a8f2ab7",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "upf-7469d55486-sblp5",
+          "uid": "8e83a127-02ce-4702-9134-321f3a8f2ab7",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794861727017521361,
+    "removed_ns": 1794861787579032844,
+    "recovered_ns": 1794861787614783613,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "pfcp_flood": {
+              "kind": "malformed",
+              "rate": 2000
+            }
+          }
+        ],
+        "revert": [
+          {
+            "pfcp_flood_stop": {
+              "kind": "malformed",
+              "rate": 2000
+            }
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "pfcp_flood",
+          "ts_ns": 1794861727266683383,
+          "started": true,
+          "kind": "malformed",
+          "gnbs": 3,
+          "distinct": 1,
+          "rate": 2000
+        },
+        {
+          "phase": "revert",
+          "action": "pfcp_flood_stop",
+          "ts_ns": 1794861787579024145,
+          "restarted": false
+        }
+      ],
+      "error": null
+    }
+  }
+}

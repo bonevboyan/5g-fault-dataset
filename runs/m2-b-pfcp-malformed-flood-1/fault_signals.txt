@@ -1,0 +1,13 @@
+run m2-b-pfcp-malformed-flood-1: fault B-pfcp-malformed-flood on upf, injected at bin 0, target working again after 60.6s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     16     29     23     26     10  52826  54024  54616  53726  53716  54622
+k8s: events on upf                     0      0      0      0      0      0      0      0      0      0      0      0
+metrics: upf CPU (cores)            0.02   0.02   0.02   0.01   0.01   0.01   0.01   0.02   0.03   0.06   0.10   0.10
+metrics: upf memory (MiB)           10.5   10.5   10.7   10.9   11.2   11.2   11.0   11.7   11.7   11.9   13.4   13.4
+traces: traces with error spans        0      2      1      0      0      0      1      1      0      0      1      2
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     535.8  536.2  385.5  492.9  500.0  365.1  532.1  535.0  471.2  451.7  508.1  476.8
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.5    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.47   0.56   0.43   0.38   0.52   0.42   0.32   0.60   0.46   0.47   0.61   0.40

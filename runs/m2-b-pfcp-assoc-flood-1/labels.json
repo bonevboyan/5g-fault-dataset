@@ -1,0 +1,93 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-b-pfcp-assoc-flood-1",
+  "workload": {
+    "start_ns": 1794843929808875078,
+    "end_ns": 1794861207907572307
+  },
+  "fault": {
+    "id": "B-pfcp-assoc-flood",
+    "level": "B",
+    "class": "pfcp_flood",
+    "title": "PFCP association flood on the UPF's N4",
+    "magnitude": {
+      "rate": 2000,
+      "kind": "assoc",
+      "distinct": 256,
+      "arrival": "flood"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "upf",
+      "procedures": [
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "upf",
+      "pods": [
+        {
+          "name": "upf-7469d55486-8xflg",
+          "uid": "184d2f1b-d7d4-4376-a5bb-9c83577aea3b",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "upf-7469d55486-8xflg",
+          "uid": "184d2f1b-d7d4-4376-a5bb-9c83577aea3b",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794860816996738448,
+    "removed_ns": 1794861147613340104,
+    "recovered_ns": 1794861147650295221,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "pfcp_flood": {
+              "kind": "assoc",
+              "rate": 2000,
+              "distinct": 256
+            }
+          }
+        ],
+        "revert": [
+          {
+            "pfcp_flood_stop": {
+              "kind": "assoc",
+              "rate": 2000,
+              "distinct": 256
+            }
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "pfcp_flood",
+          "ts_ns": 1794860817498605889,
+          "started": true,
+          "kind": "assoc",
+          "gnbs": 3,
+          "distinct": 256,
+          "rate": 2000
+        },
+        {
+          "phase": "revert",
+          "action": "pfcp_flood_stop",
+          "ts_ns": 1794861147613332659,
+          "restarted": false
+        }
+      ],
+      "error": null
+    }
+  }
+}

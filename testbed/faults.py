@@ -33,7 +33,9 @@ PKI = os.path.join(HERE, "k8s", "pki")
 STORM_INDEX_BASE = 900000    # storm UEs use imsi index >= this: a textual prefix (imsi-2089300009)
                              # the workload's UEs never reach, so one pkill per pod hits only them
 sys.path.insert(0, os.path.join(HERE, "..", "workload"))
+sys.path.insert(0, HERE)
 import ue  # noqa: E402
+import pfcp_flood  # noqa: E402
 
 
 def _storm_prefix(base):
@@ -295,6 +297,59 @@ def _act_paging_storm_stop(nf, arg):
     return {"restarted": False}
 
 
+# ---- PFCP (N4) control-message flood (level B) ----------------------------------------------
+# A rogue SMF hammering the UPF's N4 port (8805/UDP). No pod has python or nc, but the gNB pods
+# have bash, so the packets (built by pfcp_flood.py, stdlib only) are blasted from inside the
+# cluster with bash's /dev/udp. Spread over every gNB pod for rate; `pkill -f PFCP_FLOOD` stops it.
+PFCP_MARK = "PFCP_FLOOD"
+
+
+def _bash_flood(target, pkts, cap_s, batch, nap):
+    arr = " ".join("'" + "".join("\\x%02x" % b for b in p) + "'" for p in pkts)
+    # printf with the hex in the FORMAT string (not %b, which does not expand \xNN in bash); each
+    # printf to the connected UDP socket on fd 3 is one datagram. Paced: `batch` packets, then a
+    # `nap` sleep, so the rate is bounded (an unpaced loop pegs a CPU and skews the whole run).
+    return (f"# {PFCP_MARK}\n"
+            f"exec 3<>/dev/udp/{target}/8805 || exit 1\n"
+            f"pkts=({arr}); P=${{#pkts[@]}}; i=0; n=0\n"
+            f"end=$(( $(date +%s) + {cap_s} ))\n"
+            f"while [ \"$(date +%s)\" -lt \"$end\" ]; do b=0\n"
+            f"  while [ $b -lt {batch} ]; do printf \"${{pkts[$((i % P))]}}\" >&3; "
+            f"i=$((i+1)); b=$((b+1)); n=$((n+1)); done\n"
+            f"  sleep {nap}\n"
+            f"done\n"
+            f"echo {PFCP_MARK} sent $n\n")
+
+
+def _act_pfcp_flood(nf, arg):
+    """Flood the UPF's N4 (PFCP) port from every gNB pod. `kind`: heartbeat (well-formed, the UPF
+    answers each), assoc (a fresh FQDN Node ID per packet, so each registers a new peer) or
+    malformed (a bad body the UPF rejects). `rate` is packets/s per gNB pod (bounded, so the flood
+    does not peg the host). A hard `cap_s` bounds the flooder if the revert is missed; normally
+    `pfcp_flood_stop` kills it at the end of `duration_s`."""
+    kind = arg.get("kind", "assoc")
+    distinct = arg.get("distinct", 256 if kind == "assoc" else 1)
+    cap_s = arg.get("cap_s", 180)
+    rate = arg.get("rate", 2000)          # packets/s per gNB pod
+    nap = 0.05
+    batch = max(1, round(rate * nap))    # send `batch` then nap -> ~rate/s
+    target = arg.get("target", "upf")
+    pkts = [pfcp_flood._packet(kind, i + 1) for i in range(distinct)]
+    script = _bash_flood(target, pkts, cap_s, batch, nap)
+    q = "'" + script.replace("'", "'\\''") + "'"
+    gnbs = ue.gnbs()
+    for g in gnbs:
+        ue.dexec("sh", "-c", f"setsid bash -c {q} >/dev/null 2>&1 </dev/null &", gnb=g)
+    return {"started": True, "kind": kind, "gnbs": len(gnbs), "distinct": distinct, "rate": rate}
+
+
+def _act_pfcp_flood_stop(nf, arg):
+    """Kill the flooder in every gNB pod."""
+    for g in ue.gnbs():
+        ue.dexec("sh", "-c", f"pkill -f {PFCP_MARK} ; true", gnb=g)
+    return {"restarted": False}
+
+
 # ---- subscriber provisioning (level-A valid storm): the webconsole REST API, like `tb` ----
 class _PortForward:
     def __init__(self, port=15050):
@@ -343,7 +398,8 @@ def _provision(imsis):
 
 
 ACTIONS = {"mongo": _act_mongo, "cert": _act_cert, "storm": _act_storm, "storm_stop": _act_storm_stop,
-           "paging_storm": _act_paging_storm, "paging_storm_stop": _act_paging_storm_stop}
+           "paging_storm": _act_paging_storm, "paging_storm_stop": _act_paging_storm_stop,
+           "pfcp_flood": _act_pfcp_flood, "pfcp_flood_stop": _act_pfcp_flood_stop}
 
 
 def chaos_object(recipe, run_id):

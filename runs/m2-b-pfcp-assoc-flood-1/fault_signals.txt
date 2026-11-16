@@ -1,0 +1,13 @@
+run m2-b-pfcp-assoc-flood-1: fault B-pfcp-assoc-flood on upf, injected at bin 0, target working again after 330.7s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                        0      0      0     90     21     13    399    402    398    148      0      0
+k8s: events on upf                     0      0      0      0      0      0      0      0      0      0      0      0
+metrics: upf CPU (cores)               0      0      0      0      0      0      0   0.02   0.03   0.19   0.19   0.23
+metrics: upf memory (MiB)              0      0      0      0      0   11.2   11.2   14.3   14.3   15.2   15.2   15.2
+traces: traces with error spans        0      0      0      0      1      0      1      1      0      1      0      0
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      1      0      0
+ue: procedure latency p50 (ms)         0      0      0  753.8  855.4  590.9  729.1 1188.7  856.6  776.2      0      0
+ue: ping loss %                        0      0      0    0.0    0.0    0.5    0.5    0.5    0.0    1.6      0      0
+ue: ping RTT p50 (ms)                  0      0      0   1.31   0.71   1.14   1.22   1.40   0.80   0.67      0      0

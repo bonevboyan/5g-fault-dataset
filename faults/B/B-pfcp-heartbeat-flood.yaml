@@ -1,0 +1,26 @@
+id: B-pfcp-heartbeat-flood
+level: B
+class: pfcp_flood
+title: PFCP heartbeat flood on the UPF's N4
+description: >-
+  Every gNB pod blasts the UPF's N4 (PFCP, 8805/UDP) with well-formed PFCP Heartbeat Requests. The
+  UPF must parse and answer each one, so the surge floods the UPF's N4 receive/response path
+  without creating any association state. Models a PFCP signalling flood (catalogue B), the
+  happy-path variant. On revert the flooder is killed.
+target:
+  nf: upf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  rate: 2000
+  kind: heartbeat
+  arrival: flood
+expected:
+  first_affected: upf
+  procedures: [pdu_session_establishment]
+inject:
+  steps:
+    apply:  [{pfcp_flood: &f {kind: heartbeat, rate: 2000}}]
+    revert: [{pfcp_flood_stop: *f}]

@@ -5,8 +5,9 @@ the workload and writes the ground-truth labels to `runs/<id>/labels.json`. A ru
 `--fault` writes the same file with `"fault": null`, so fault-free runs are labelled as normal.
 
 Levels follow `docs/5g_fault_catalogue.pdf`. v1: **E** (operational baseline, Chaos Mesh), **D**
-(dependency and data layer) and the registration/paging half of **A** (signalling storms). A's
-packet-level faults and level **B**/**C** wait for more capacity (see `docs/M2-findings.md`).
+(dependency and data layer), the registration/paging half of **A** (signalling storms) and the
+PFCP control-message half of **B** (N4 floods). A's packet-level faults, B's user-plane (GTP-U)
+half and level **C** wait for more capacity (see `docs/M2-findings.md`).
 
 ## Recipe format
 
@@ -75,9 +76,28 @@ Injector kinds (exactly one per recipe):
   Storm UEs take IMSI indices from `index_base` (default 900000), a range the workload's UEs never
   reach, so they are matched by a distinct IMSI prefix and never collide with legitimate UEs.
 
+  Level B (PFCP / N4 floods) adds one more `steps` action, `pfcp_flood`, with a `pfcp_flood_stop`
+  partner:
+
+  ```yaml
+  inject:
+    steps:
+      apply:  [{pfcp_flood: &f {kind: assoc, rate: 2000}}]
+      revert: [{pfcp_flood_stop: *f}]
+  ```
+
+  `pfcp_flood` blasts the UPF's N4 (PFCP, UDP/8805) with hand-built PFCP messages (built by
+  `testbed/pfcp_flood.py`, stdlib only) as a rogue SMF would. `kind`: `heartbeat` (well-formed, the
+  UPF answers each), `assoc` (Association Setup with a fresh FQDN Node ID per packet, so each
+  registers a new peer — free5GC's UPF rejects an IPv4 Node ID here) or `malformed` (a bad body the
+  UPF rejects on its error path). `rate` is packets/s per gNB pod. Since no NF/gNB pod ships python
+  or nc, the packets are sent from inside the cluster with bash's `/dev/udp`, spread over every gNB
+  pod; the flooder is rate-limited (an unpaced loop pegs a host CPU and skews the run) and marked so
+  `pfcp_flood_stop` kills it with `pkill`.
+
 For a `steps` fault, `target.nf` is where the root cause lives (`db` for data faults, `nrf` for
-registry faults, the NF itself for certificate faults, `amf` for the signalling storms), not
-necessarily the pod the commands run in.
+registry faults, the NF itself for certificate faults, `amf` for the signalling storms, `upf` for
+the N4 floods), not necessarily the pod the commands run in.
 
 ## Labels (`runs/<id>/labels.json`, schema `f5g-labels/1`)
 

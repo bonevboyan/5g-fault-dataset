@@ -1,0 +1,90 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-a-paging-storm-1",
+  "workload": {
+    "start_ns": 1794836018229140577,
+    "end_ns": 1794836198811113083
+  },
+  "fault": {
+    "id": "A-paging-storm",
+    "level": "A",
+    "class": "signaling_storm",
+    "title": "Paging storm of idle UEs",
+    "magnitude": {
+      "storm_ues": 50,
+      "mode": "paging",
+      "arrival": "burst"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "amf",
+      "procedures": [
+        "service_request_mt_paging"
+      ]
+    },
+    "target": {
+      "nf": "amf",
+      "pods": [
+        {
+          "name": "amf-7d96b4ffd-xns8j",
+          "uid": "0ddd1afb-fb0a-4789-a8d5-d75ee6b898b3",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "amf-7d96b4ffd-xns8j",
+          "uid": "0ddd1afb-fb0a-4789-a8d5-d75ee6b898b3",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794836078268585595,
+    "removed_ns": 1794836144411908474,
+    "recovered_ns": 1794836144450911316,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "paging_storm": {
+              "count": 50,
+              "index_base": 900000,
+              "tempo_ms": 0
+            }
+          }
+        ],
+        "revert": [
+          {
+            "paging_storm_stop": {
+              "count": 50,
+              "index_base": 900000,
+              "tempo_ms": 0
+            }
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "paging_storm",
+          "ts_ns": 1794836083248920965,
+          "started": 50,
+          "paged": 49,
+          "mode": "paging"
+        },
+        {
+          "phase": "revert",
+          "action": "paging_storm_stop",
+          "ts_ns": 1794836144411899408,
+          "restarted": false
+        }
+      ],
+      "error": null
+    }
+  }
+}

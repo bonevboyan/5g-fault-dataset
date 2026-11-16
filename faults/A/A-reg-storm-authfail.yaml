@@ -1,0 +1,30 @@
+id: A-reg-storm-authfail
+level: A
+class: signaling_storm
+title: Registration storm of unauthorised UEs
+description: >-
+  300 extra UERANSIM UEs with IMSIs that have no subscriber record are started across the gNB pods
+  within a few seconds and kept registering for 60 s. Each one drives a full NAS registration and
+  authentication that the core must process and reject (the UDM has no such subscriber), flooding
+  the AMF, AUSF and UDM with signalling. Models a registration/auth flood (catalogue A1/A3). The
+  storm UEs are not in the workload's UE records; the effect is read from the AMF and from the
+  legitimate UEs' procedure latency.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  storm_ues: 300
+  mode: auth_reject
+  arrival: burst
+expected:
+  first_affected: amf
+  procedures: [initial_registration]
+inject:
+  steps:
+    apply:
+    - storm: &storm {count: 300, mode: auth_reject, tempo_ms: 0}
+    revert:
+    - storm_stop: *storm

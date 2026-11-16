@@ -1,0 +1,29 @@
+id: A-reg-storm-valid
+level: A
+class: signaling_storm
+title: Registration storm of valid UEs
+description: >-
+  200 extra subscribers are provisioned and their UEs are started across the gNB pods within a few
+  seconds, then kept running for 60 s. Unlike the auth-reject storm, these UEs register successfully
+  and set up PDU sessions, so the surge reaches the whole control plane (AMF, AUSF, UDM, SMF, PCF)
+  and the UPF. Models a legitimate-looking registration surge / flash crowd (catalogue A1). On
+  revert the storm UEs are killed and their subscribers deleted.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  storm_ues: 200
+  mode: valid
+  arrival: burst
+expected:
+  first_affected: amf
+  procedures: [initial_registration, pdu_session_establishment]
+inject:
+  steps:
+    apply:
+    - storm: &storm {count: 200, mode: valid, index_base: 900000, tempo_ms: 0}
+    revert:
+    - storm_stop: *storm

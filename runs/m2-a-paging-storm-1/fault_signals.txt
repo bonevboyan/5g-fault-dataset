@@ -1,0 +1,13 @@
+run m2-a-paging-storm-1: fault A-paging-storm on amf, injected at bin 0, target working again after 66.2s
+bins of 10s relative to the injection
+
+                                     -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50
+logs: ERRO+WARN                       16     15     25     24     23     14    329     27     20     27     14     23
+k8s: events on amf                     0      0      0      0      0      0      0      0      0      0      0      0
+metrics: amf CPU (cores)            0.05   0.06   0.05   0.05   0.03   0.01   0.01   0.02   0.03   0.02   0.03   0.02
+metrics: amf memory (MiB)           23.7   23.7   25.7   26.8   26.8   26.8   26.8   28.3   28.0   28.5   28.5   30.2
+traces: traces with error spans        0      1      0      1      0      1      0      1      0      1      0      0
+ue: failed procedures                  0      0      0      0      0      0      0      0      0      0      0      0
+ue: procedure latency p50 (ms)     582.2  530.3  360.2  491.6  482.3  464.9  509.8  470.6  533.9  486.4  552.9  521.9
+ue: ping loss %                      0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)               0.43   0.53   0.39   0.46   0.52   0.35   0.38   0.37   0.37   0.41   0.34   0.31

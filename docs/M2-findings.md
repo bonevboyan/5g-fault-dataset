@@ -107,3 +107,37 @@ the service graph, which is the point of the level.
 **Known behaviour, kept:** a UE whose registration fails during `D-db-auth-corrupt` or
 `D-nrf-drop-udm` stays deregistered for the rest of the run, because UERANSIM does not retry. As
 with the AMF/UPF kills in level E, this is a property of the simulated RAN.
+
+## Level-A recipes (signalling storms), one validation run each (2026-11-16)
+
+Level A floods the control plane with extra UERANSIM UEs instead of breaking a component. A new
+`storm` injector (`testbed/faults.py`) starts a burst of extra UEs across the gNB pods at a high
+IMSI index (base 900000) the workload's UEs never reach, so the storm never collides with the
+legitimate UEs; the effect is read from the AMF/SMF and from the legitimate UEs' latency and ping.
+Three recipes, same workload as E/D (3 gNBs × 50 UEs, 180 s, seed 7), onset 60 s, held 60 s, then
+reverted. Runs `m2-a-<recipe>-1`.
+
+| recipe | what it floods | where it shows | effect on legitimate UEs |
+|---|---|---|---|
+| `A-reg-storm-authfail` (300 UEs, no subscriber) | registration + authentication, every attempt rejected at the UDM | ERRO/WARN 20 → **1827**, held the full 60 s; error traces 0 → **301**, held | none: ping loss 0 %, latency flat |
+| `A-reg-storm-valid` (200 UEs, provisioned) | full registration + PDU session setup, succeeds | ERRO/WARN 20 → **1231** in one 10 s bin (the burst), then back to baseline; AMF memory 25 → **159 MiB**, settling to ~50; almost no error traces | none: ping loss 0 %, latency flat |
+| `A-paging-storm` (50 UEs, paged in a loop) | paging / service-request path (AMF paging, SMF N1N2MessageTransfer, UPF buffering) | adds the storm UEs' paging procedures (initial_registration +18, an_release +15, service_request_mo +10, service_request_mt_paging +4) and a one-bin ERRO/WARN burst to ~330 | none: ping loss 0 %, latency flat |
+
+The three have distinct signatures: the **auth-reject** storm is a *sustained* flood of
+reject/error logs and error traces (the core keeps processing and failing registrations for the
+whole 60 s); the **valid** storm is a *brief* signalling burst plus a lasting memory step (the
+extra 200 subscribers' retained registration/session state), with no errors because every
+registration succeeds; the **paging** storm is the only one that drives the paging and
+service-request path, visible as extra paging/service-request procedures.
+
+**Finding, reported as-is: the storms are loud but benign on this hardware.** In all three the AMF
+has enough headroom that its CPU barely moves and the legitimate UEs see 0 % ping loss and
+unchanged latency. The faults are clearly detectable (logs, traces, procedure counts, the memory
+step) but do not degrade service. Storms that would actually starve the core need more generated
+load than one laptop can drive; that waits for more capacity (Gunship), the same reason the
+packet-level faults (A's GTP-U half, level B) are deferred. The paging storm is also the weakest
+signal of the three: its driver releases and pages each UE over a per-UE `kubectl exec`, so it
+completes only about one pass over the 50 UEs in 60 s — a burst rather than a heavy flood.
+
+**Scope:** level A here is the registration/paging slice of catalogue A1/A3. Its signalling-flood
+character is captured by these three; heavier floods and the packet-level storms are future work.

@@ -10,6 +10,10 @@ Two injectors:
             mongo: <js>       run in the testbed's MongoDB (database `free5gc`, also the NRF's registry)
             cert: <kind>      replace the target NF's SBI key/cert (kind: expired | untrusted) and
                               restart its pod; `cert: restore` puts the testbed PKI back (and restarts)
+            storm: <spec>     start a burst of extra UERANSIM UEs that flood the AMF/AUSF/UDM with
+                              registrations (level A); `storm_stop: <same spec>` kills them. The UEs
+                              are placed round-robin on the running gNB pods at a high IMSI index
+                              (default base 900000) so they never collide with the workload's UEs.
 """
 import datetime as dt
 import tempfile
@@ -17,13 +21,31 @@ import json
 import os
 import re
 import subprocess
+import sys
 import threading
 import time
+import urllib.request
 
 import yaml
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PKI = os.path.join(HERE, "k8s", "pki")
+STORM_INDEX_BASE = 900000    # storm UEs use imsi index >= this: a textual prefix (imsi-2089300009)
+                             # the workload's UEs never reach, so one pkill per pod hits only them
+sys.path.insert(0, os.path.join(HERE, "..", "workload"))
+import ue  # noqa: E402
+
+
+def _storm_prefix(base):
+    """IMSI prefix that matches the storm UEs (index >= base) but no workload UE (index from 0).
+    The first digit where imsi(base) diverges from imsi(0) is a `9` the workload never reaches, so
+    including it makes `pkill -f -i <prefix>` and log scrapes hit only storm UEs. (Computed, not
+    `imsi(base)[:-len(str(base))]`, which stripped one digit too many and also matched workload UEs.)"""
+    lo, hi = ue.imsi(0), ue.imsi(base)
+    i = 0
+    while i < len(hi) and i < len(lo) and hi[i] == lo[i]:
+        i += 1
+    return hi[:i + 1]
 
 NS = "f5g"
 SCHEMA = "f5g-labels/1"
@@ -139,7 +161,189 @@ def _act_cert(nf, kind):
     return {"restarted": True, "cert": info}
 
 
-ACTIONS = {"mongo": _act_mongo, "cert": _act_cert}
+def _storm_plan(arg):
+    """Deterministic (gnb, imsi) placement, recomputed identically by apply and by storm_stop."""
+    gnbs = ue.gnbs()
+    base = arg.get("index_base", STORM_INDEX_BASE)
+    return [(gnbs[k % len(gnbs)], ue.imsi(base + k)) for k in range(arg["count"])]
+
+
+def _act_storm(nf, arg):
+    """Start `count` extra UEs across the running gNB pods. mode `auth_reject` (default) uses
+    unprovisioned IMSIs that fail authentication; mode `valid` provisions them first so they
+    register and set up sessions."""
+    mode, tempo = arg.get("mode", "auth_reject"), arg.get("tempo_ms", 0)
+    plan = _storm_plan(arg)
+    if mode == "valid":
+        _provision([u for _, u in plan])
+    by_g = {}
+    for g, u in plan:
+        by_g.setdefault(g, []).append(u)
+
+    def one(g):
+        if tempo:
+            for u in by_g[g]:
+                ue.start(u, g)
+                time.sleep(tempo / 1000)
+        else:
+            ue.start_many(g, by_g[g])   # whole burst in one exec
+    ts = [threading.Thread(target=one, args=(g,)) for g in by_g]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    return {"started": len(plan), "gnbs": len(by_g), "mode": mode}
+
+
+def _act_storm_stop(nf, arg):
+    """Kill every storm nr-ue in one pkill per pod (matched by the high-index IMSI prefix), and,
+    for a `valid` storm, delete the subscribers it provisioned."""
+    base = arg.get("index_base", STORM_INDEX_BASE)
+    prefix = _storm_prefix(base)
+    for g in ue.gnbs():
+        ue.dexec("sh", "-c", f"pkill -f -- '-i {prefix}' ; true", gnb=g)
+    if arg.get("mode") == "valid":
+        _deprovision([u for _, u in _storm_plan(arg)])
+    return {"restarted": False}
+
+
+def _deprovision(imsis):
+    """Delete the subscriber records a valid/paging storm provisioned (every webconsole collection)."""
+    ids = ",".join(f'"{u}"' for u in imsis)
+    _mongo("var ids=[%s];"
+           "['subscriptionData.authenticationData.authenticationSubscription',"
+           "'subscriptionData.identityData','subscriptionData.provisionedData.amData',"
+           "'subscriptionData.provisionedData.smData',"
+           "'subscriptionData.provisionedData.smfSelectionSubscriptionData',"
+           "'policyData.ues.amData','policyData.ues.smData']"
+           ".forEach(function(c){db.getCollection(c).deleteMany({ueId:{$in:ids}});});"
+           "print('deprovisioned '+ids.length);" % ids)
+
+
+# ---- paging storm (level A): a burst of idle UEs paged in a loop ----------------------------
+_PAGING = {}   # index_base -> {"stop": Event, "thread": Thread}; links apply to its loop for revert
+_TUN_UP = re.compile(r"\[(imsi-\d+)\].*?uesimtun\d+,\s*([\d.]+)\]")
+
+
+def _storm_imsi_ips(prefix):
+    """{imsi: ip} for the storm UEs, scraped from the gNB pods' logs (UERANSIM's `TUN interface
+    [uesimtunN, <ip>] is up` line, which we prefix with `[imsi-...]`). Only storm UEs match the
+    high-index prefix, so the workload's UEs are never paged."""
+    out = {}
+    for g in ue.gnbs():
+        r = subprocess.run(["kubectl", "logs", "-n", NS, "-l", f"app=gnb-{g}", "--tail=-1"],
+                           capture_output=True, text=True)
+        for imsi, ip in _TUN_UP.findall(r.stdout + r.stderr):
+            if imsi.startswith(prefix):
+                out[imsi] = ip
+    return out
+
+
+def _act_paging_storm(nf, arg):
+    """Provision and start `count` valid UEs, wait for their PDU sessions, then run a background
+    loop that releases each to CM-IDLE and sends it downlink data, forcing the AMF to page it. This
+    floods the paging path (AMF paging, SMF N1N2MessageTransfer, UPF buffering) and the UEs' service
+    requests -- a different control-plane path from the registration storms."""
+    base = arg.get("index_base", STORM_INDEX_BASE)
+    tempo = arg.get("tempo_ms", 0)
+    plan = _storm_plan(arg)
+    _provision([u for _, u in plan])
+    by_g = {}
+    for g, u in plan:
+        by_g.setdefault(g, []).append(u)
+    for g in by_g:
+        ue.start_many(g, by_g[g])
+
+    prefix = _storm_prefix(base)
+    imsi_ip = {}
+    for _ in range(30):                      # let the burst register and bring TUNs up
+        time.sleep(1.0)
+        imsi_ip = _storm_imsi_ips(prefix)
+        if len(imsi_ip) >= 0.8 * len(plan):
+            break
+
+    stop = threading.Event()
+
+    def loop():
+        idx = ue.NgapIndex()
+        while not stop.is_set():
+            for imsi, ip in list(imsi_ip.items()):
+                if stop.is_set():
+                    break
+                ue.release_to_idle(imsi, idx)    # -> CM-IDLE (False if not resolvable yet; skipped)
+                ue.dn_ping(ip, count=1, timeout=1)   # downlink to the idle UE -> paging
+                if tempo:
+                    stop.wait(tempo / 1000)
+
+    t = threading.Thread(target=loop, daemon=True)
+    t.start()
+    _PAGING[base] = {"stop": stop, "thread": t}
+    return {"started": len(plan), "paged": len(imsi_ip), "mode": "paging"}
+
+
+def _act_paging_storm_stop(nf, arg):
+    """Stop the paging loop, kill the storm UEs, and delete their subscribers."""
+    base = arg.get("index_base", STORM_INDEX_BASE)
+    st = _PAGING.pop(base, None)
+    if st:
+        st["stop"].set()
+        st["thread"].join(timeout=10)
+    prefix = _storm_prefix(base)
+    for g in ue.gnbs():
+        ue.dexec("sh", "-c", f"pkill -f -- '-i {prefix}' ; true", gnb=g)
+    _deprovision([u for _, u in _storm_plan(arg)])
+    return {"restarted": False}
+
+
+# ---- subscriber provisioning (level-A valid storm): the webconsole REST API, like `tb` ----
+class _PortForward:
+    def __init__(self, port=15050):
+        self.port = port
+
+    def __enter__(self):
+        self.p = subprocess.Popen(["kubectl", "port-forward", "-n", NS, "deploy/webui", f"{self.port}:5000"],
+                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(60):
+            if _webui_token(self.port):
+                return self
+            time.sleep(0.5)
+        raise RuntimeError("webui port-forward did not come up")
+
+    def __exit__(self, *exc):
+        self.p.terminate()
+        self.p.wait()
+
+
+def _webui_token(port):
+    try:
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/login", method="POST",
+                                     data=json.dumps({"username": "admin", "password": "free5gc"}).encode(),
+                                     headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=3) as r:
+            return json.load(r).get("access_token")
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _provision(imsis):
+    plmn = "20893"
+    tmpl = json.load(open(os.path.join(HERE, "config", "subscriber.json")))
+    with _PortForward() as pf:
+        tok = _webui_token(pf.port)
+        for u in imsis:
+            idx = ue.index(u)
+            body = json.loads(json.dumps(tmpl))
+            body["ueId"] = u
+            body["AuthenticationSubscription"]["sequenceNumber"] = "000000000023"
+            body["AccessAndMobilitySubscriptionData"]["gpsis"] = [f"msisdn-09{idx:08d}"]
+            req = urllib.request.Request(f"http://127.0.0.1:{pf.port}/api/subscriber/{u}/{plmn}", method="POST",
+                                         data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json", "Token": tok})
+            urllib.request.urlopen(req, timeout=10).close()
+
+
+ACTIONS = {"mongo": _act_mongo, "cert": _act_cert, "storm": _act_storm, "storm_stop": _act_storm_stop,
+           "paging_storm": _act_paging_storm, "paging_storm_stop": _act_paging_storm_stop}
 
 
 def chaos_object(recipe, run_id):
@@ -182,8 +386,8 @@ class Injection(threading.Thread):
                 return
             before = _pods(nf)
             self.rec["pods"] = [{"name": n, "uid": u, "node": node} for n, u, node, _ in before]
-            self._apply()
             self.rec["injected_ns"] = time.time_ns()
+            self._apply()
             self.log(f"fault {self.r['id']}: injected ("
                      + (f"{self.obj['kind']} {self.obj['metadata']['name']})" if self.obj
                         else f"{len(self.steps['apply'])} step(s))"))

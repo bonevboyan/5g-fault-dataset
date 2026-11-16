@@ -106,21 +106,32 @@ _UE_FILTER = ("" if os.environ.get("F5G_UE_DEBUG") == "1"
               else f"| sed -u -E '/\\[debug\\]/{{/{_NAS_MARKS}/!d}}' ")
 
 
-def start(ue):
-    """Start (or restart) the nr-ue process for one IMSI in its gNB's pod.
+def start(ue, g=None):
+    """Start (or restart) the nr-ue process for one IMSI in a gNB's pod (its own by default).
 
     -r: no per-TUN policy routing. UERANSIM's routing setup races when UEs attach concurrently
     (two UEs grab the same uesimtunN, the loser leaves a stale route in rt_uesimtunN, and every
     later UE that reuses that lowest-free name fails). The driver pings with `ping -I <tun>`,
     which binds to the device and does not need those routes."""
-    g = gnb_of(ue)
+    g = gnb_of(ue) if g is None else g
     dexec("sh", "-c", f"pkill -f -- '-i {ue}$' ; true", gnb=g)
     spawn(f"./nr-ue -r -c ./config/uecfg.yaml -i {ue} 2>&1 {_UE_FILTER}"
           f"| sed -u 's/^/[{ue}] /' > /proc/1/fd/1", gnb=g)
 
 
-def stop(ue, switch_off=True):
-    g = gnb_of(ue)
+def start_many(g, imsis):
+    """Launch many nr-ue at once in gNB g's pod with a single exec (storm bring-up). No per-UE
+    pkill (storm IMSIs are fresh), so the whole burst lands in a tight window."""
+    cmds = []
+    for u in imsis:
+        inner = f"./nr-ue -r -c ./config/uecfg.yaml -i {u} 2>&1 {_UE_FILTER}| sed -u 's/^/[{u}] /' > /proc/1/fd/1"
+        q = "'" + inner.replace("'", "'\\''") + "'"
+        cmds.append(f"setsid sh -c {q} >/dev/null 2>&1 </dev/null &")
+    dexec("sh", "-c", "\n".join(cmds) + "\ntrue", gnb=g)
+
+
+def stop(ue, switch_off=True, g=None):
+    g = gnb_of(ue) if g is None else g
     if switch_off:
         dexec(*NR_CLI, ue, "-e", "deregister switch-off", gnb=g)
     dexec("sh", "-c", f"sleep 0.5; pkill -f -- '-i {ue}$' ; true", gnb=g)

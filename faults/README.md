@@ -4,8 +4,9 @@ One YAML file per fault ("recipe"). `tb run --fault faults/<level>/<name>.yaml` 
 the workload and writes the ground-truth labels to `runs/<id>/labels.json`. A run without
 `--fault` writes the same file with `"fault": null`, so fault-free runs are labelled as normal.
 
-Levels follow `docs/5g_fault_catalogue.pdf`. v1 (decided 2026-11-15): **E** (operational
-baseline, Chaos Mesh) and **D** (dependency and data layer).
+Levels follow `docs/5g_fault_catalogue.pdf`. v1: **E** (operational baseline, Chaos Mesh), **D**
+(dependency and data layer) and the registration/paging half of **A** (signalling storms). A's
+packet-level faults and level **B**/**C** wait for more capacity (see `docs/M2-findings.md`).
 
 ## Recipe format
 
@@ -52,8 +53,31 @@ Injector kinds (exactly one per recipe):
   `f5g-pki-override-<nf>` that the pod copies over its testbed cert at start-up
   (`testbed/k8s/render.py`). The revert always runs, also when the run ends early or a step fails.
 
+  Level A (signalling storms) uses three more `steps` actions, each with a `_stop` partner that is
+  given the same spec (a YAML anchor) so apply and revert agree on what to undo:
+
+  ```yaml
+  inject:
+    steps:
+      apply:  [{storm: &s {count: 300, mode: auth_reject}}]   # or paging_storm
+      revert: [{storm_stop: *s}]
+  ```
+
+  - `storm`: start `count` extra UERANSIM UEs across the running gNB pods. `mode: auth_reject`
+    uses IMSIs with no subscriber record (every registration fails authentication at the UDM);
+    `mode: valid` provisions the subscribers first (webconsole REST API) so they register and set
+    up PDU sessions. `storm_stop` kills the UEs and, for a valid storm, deletes the subscribers.
+  - `paging_storm`: a `valid` burst that, once registered, is repeatedly released to CM-IDLE and
+    sent downlink data, so the core must page it — flooding the paging / service-request path
+    (AMF paging, SMF N1N2MessageTransfer, UPF buffering) rather than registration. `paging_storm_stop`
+    ends the loop, kills the UEs and deletes the subscribers.
+
+  Storm UEs take IMSI indices from `index_base` (default 900000), a range the workload's UEs never
+  reach, so they are matched by a distinct IMSI prefix and never collide with legitimate UEs.
+
 For a `steps` fault, `target.nf` is where the root cause lives (`db` for data faults, `nrf` for
-registry faults, the NF itself for certificate faults), not necessarily the pod the commands run in.
+registry faults, the NF itself for certificate faults, `amf` for the signalling storms), not
+necessarily the pod the commands run in.
 
 ## Labels (`runs/<id>/labels.json`, schema `f5g-labels/1`)
 

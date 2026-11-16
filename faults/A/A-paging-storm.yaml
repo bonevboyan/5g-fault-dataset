@@ -1,0 +1,33 @@
+id: A-paging-storm
+level: A
+class: signaling_storm
+title: Paging storm of idle UEs
+description: >-
+  50 extra subscribers are provisioned and their UEs are started across the gNB pods. Once they
+  have registered and set up PDU sessions, a loop repeatedly releases each to CM-IDLE and sends it
+  downlink data, so the core must page it: every round drives UPF buffering, an SMF
+  N1N2MessageTransfer and an AMF paging message, followed by the UE's service request. Unlike the
+  registration storms (catalogue A1/A3), this floods the paging and service-request path rather
+  than registration/authentication. Models a paging/service-request storm (catalogue A). The storm
+  UEs are not in the workload's UE records; the effect is read from the AMF/SMF and from the
+  legitimate UEs' procedure latency. On revert the loop stops, the storm UEs are killed and their
+  subscribers deleted.
+target:
+  nf: amf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  storm_ues: 50
+  mode: paging
+  arrival: burst
+expected:
+  first_affected: amf
+  procedures: [service_request_mt_paging]
+inject:
+  steps:
+    apply:
+    - paging_storm: &storm {count: 50, index_base: 900000, tempo_ms: 0}
+    revert:
+    - paging_storm_stop: *storm

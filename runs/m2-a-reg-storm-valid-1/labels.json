@@ -1,0 +1,93 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-a-reg-storm-valid-1",
+  "workload": {
+    "start_ns": 1794835743733212828,
+    "end_ns": 1794835924207802801
+  },
+  "fault": {
+    "id": "A-reg-storm-valid",
+    "level": "A",
+    "class": "signaling_storm",
+    "title": "Registration storm of valid UEs",
+    "magnitude": {
+      "storm_ues": 200,
+      "mode": "valid",
+      "arrival": "burst"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "amf",
+      "procedures": [
+        "initial_registration",
+        "pdu_session_establishment"
+      ]
+    },
+    "target": {
+      "nf": "amf",
+      "pods": [
+        {
+          "name": "amf-7d96b4ffd-hlm4w",
+          "uid": "6a3e26b0-d75f-4379-bfee-b51df13aa30e",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "amf-7d96b4ffd-hlm4w",
+          "uid": "6a3e26b0-d75f-4379-bfee-b51df13aa30e",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794835803770074764,
+    "removed_ns": 1794835866493299122,
+    "recovered_ns": 1794835866538369411,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "storm": {
+              "count": 200,
+              "mode": "valid",
+              "index_base": 900000,
+              "tempo_ms": 0
+            }
+          }
+        ],
+        "revert": [
+          {
+            "storm_stop": {
+              "count": 200,
+              "mode": "valid",
+              "index_base": 900000,
+              "tempo_ms": 0
+            }
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "storm",
+          "ts_ns": 1794835806043227162,
+          "started": 200,
+          "gnbs": 3,
+          "mode": "valid"
+        },
+        {
+          "phase": "revert",
+          "action": "storm_stop",
+          "ts_ns": 1794835866493291327,
+          "restarted": false
+        }
+      ],
+      "error": null
+    }
+  }
+}

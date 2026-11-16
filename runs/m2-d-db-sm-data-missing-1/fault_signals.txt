@@ -1,0 +1,13 @@
+run m2-d-db-sm-data-missing-1: fault D-db-sm-data-missing on db, injected at bin 0, target working again after 60.2s
+bins of 10s relative to the injection
+
+                                     -70    -60    -50    -40    -30    -20    -10     +0    +10    +20    +30    +40    +50    +60    +70    +80    +90   +100   +110
+logs: ERRO+WARN                        0     16     20     20     23     23     14     46     49     60     80     74     73     49     42     24     23     15     31
+k8s: events on db                      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0      0
+metrics: db CPU (cores)             0.06   0.06   0.06   0.06   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03   0.03
+metrics: db memory (MiB)            72.0   71.9   72.8   72.8   74.7   74.7   75.4   74.9   74.9   75.0   75.0   75.0   75.3   76.2   76.2   75.6   76.0   76.0   75.9
+traces: traces with error spans        0      0      1      0      0      0      1      5      5      7     10      9      9      0      0      1      0      0      2
+ue: failed procedures                  0      0      0      0      0      0      1      4      3      3      3      0      0      0      0      0      0      0      2
+ue: procedure latency p50 (ms)         0  529.8  504.7  363.5  505.1  498.9  217.5  497.4  451.3  264.8  327.7  559.7  551.6  487.8  378.0  356.3  548.0  456.9  446.3
+ue: ping loss %                        0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0    0.0
+ue: ping RTT p50 (ms)                  0   0.37   0.59   0.39   0.51   0.44   0.31   0.79   0.80   0.53   0.59   0.44   0.43   0.43   0.58   0.31   0.41   0.40   0.95

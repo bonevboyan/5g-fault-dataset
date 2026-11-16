@@ -1,0 +1,65 @@
+[23:02:55] run m2-d-db-slow-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[23:02:55]   gate ok   gtp5g loaded (0.0s)
+[23:02:55]   gate ok   storage tier reachable (0.02s)
+[23:02:55]   gate ok   cluster roles Ready (0.04s)
+[23:02:56] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[23:03:00]   gate ok   otel-gateway Ready (4.14s)
+[23:03:03]   gate ok   logs + metrics reach storage (3.02s)
+[23:03:03] stage 1: mongo
+[23:03:08]   gate ok   mongo Ready (4.15s)
+[23:03:08] stage 2: NRF
+[23:03:10]   gate ok   nrf SBI up (https) (2.16s)
+[23:03:10] stage 3: UPF
+[23:03:16]   gate ok   upf started (6.39s)
+[23:03:16] stage 4: control-plane NFs + webconsole (AF)
+[23:03:20]   gate ok   all NF types registered in NRF (2.23s)
+[23:03:20]   gate ok   smf<->upf PFCP association (0.05s)
+[23:03:20]   gate ok   amf Ready (0.05s)
+[23:03:20]   gate ok   ausf Ready (0.04s)
+[23:03:20]   gate ok   udm Ready (0.04s)
+[23:03:20]   gate ok   udr Ready (0.04s)
+[23:03:20]   gate ok   pcf Ready (0.04s)
+[23:03:20]   gate ok   nssf Ready (0.04s)
+[23:03:20]   gate ok   smf Ready (0.05s)
+[23:03:20]   gate ok   chf Ready (0.04s)
+[23:03:20]   gate ok   webui Ready (0.05s)
+[23:03:23]   gate ok   traces reach storage (3.03s)
+[23:03:23] stage 5: 150 subscribers
+[23:03:24]   gate ok   webui port-forward (1.2s)
+[23:03:26]   gate ok   150 subscribers provisioned
+[23:03:26] stage 6: 3 gNBs
+[23:03:28]   gate ok   gnb-0 NG Setup (2.17s)
+[23:03:28]   gate ok   gnb-1 NG Setup (0.04s)
+[23:03:28]   gate ok   gnb-2 NG Setup (0.05s)
+[23:03:28] stage 7: 150 UEs
+[23:04:06]   gate ok   150 UEs registered + PDU sessions with TUN (22.05s)
+[23:04:06]   gate ok   no pod restarts during bring-up (0.05s)
+[23:04:06] READY  run=m2-d-db-slow-1  dir=../runs/m2-d-db-slow-1  (TUN repairs: 2)
+[23:04:06]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-db-slow-1/workload
+[23:05:07] fault D-db-slow: injected (NetworkChaos d-db-slow-m2-d-db-slow-1)
+[23:06:07] fault D-db-slow: removed after 60s
+[23:06:07] fault D-db-slow: target Ready again after 0.1s
+pings: 4327  loss: 0.00%  rtt p50: 0.43 ms   (+73 first-after-wake probes, 33 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=2
+an_release                           n=45   ok=45   aborted=0  t3580=0  p50=533 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=784 ms
+initial_registration                 n=18   ok=18   aborted=0  t3580=0  p50=300 ms
+pdu_session_establishment            n=29   ok=29   aborted=0  t3580=5  p50=1179 ms
+pdu_session_establishment_initial    n=18   ok=18   aborted=0  t3580=0  p50=476 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=206 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=211 ms
+service_request_mt_paging            n=23   ok=23   aborted=0  t3580=0  p50=112 ms
+[23:07:07] labels: D-db-slow injected=yes recovered=0.1s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           45    45      533ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      784ms     22ms    618ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 18    18      300ms     28ms   2658ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            29    29     1179ms    220ms  17573ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    18    18      476ms    313ms   3193ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      206ms     17ms    184ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      211ms     22ms    666ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            23    23      112ms      3ms      6ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 5/29 (driver heuristic: 5), AMF duplicate-PSI drops 5, release-end->request gap p50 732 ms
+[23:07:12] deleting testbed namespaces
+[23:07:48] run m2-d-db-slow-1: done

@@ -1,0 +1,32 @@
+id: D-db-slow
+level: D
+class: db_slow
+title: Slow MongoDB
+description: >-
+  Every reply from the MongoDB pod is delayed by 100 ms for 60 s, like an overloaded or remote
+  database. Each registration and data session makes several database round trips through the UDR,
+  PCF and NRF, so the delay adds up and procedures slow down.
+target:
+  nf: db
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  latency_ms: 100
+  jitter_ms: 10
+  direction: egress
+expected:
+  first_affected: udr
+  procedures: [initial_registration, pdu_session_establishment]
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: delay
+      mode: all
+      delay:
+        latency: 100ms
+        jitter: 10ms
+        correlation: "0"
+      direction: to

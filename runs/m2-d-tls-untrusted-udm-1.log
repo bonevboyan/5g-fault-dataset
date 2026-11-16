@@ -1,0 +1,64 @@
+[23:27:15] run m2-d-tls-untrusted-udm-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[23:27:15]   gate ok   gtp5g loaded (0.0s)
+[23:27:16]   gate ok   storage tier reachable (0.02s)
+[23:27:16]   gate ok   cluster roles Ready (0.04s)
+[23:27:16] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[23:27:19]   gate ok   otel-gateway Ready (2.1s)
+[23:27:25]   gate ok   logs + metrics reach storage (6.03s)
+[23:27:25] stage 1: mongo
+[23:27:27]   gate ok   mongo Ready (2.09s)
+[23:27:27] stage 2: NRF
+[23:27:29]   gate ok   nrf SBI up (https) (2.17s)
+[23:27:29] stage 3: UPF
+[23:27:36]   gate ok   upf started (6.38s)
+[23:27:36] stage 4: control-plane NFs + webconsole (AF)
+[23:27:39]   gate ok   all NF types registered in NRF (2.25s)
+[23:27:39]   gate ok   smf<->upf PFCP association (0.05s)
+[23:27:39]   gate ok   amf Ready (0.04s)
+[23:27:39]   gate ok   ausf Ready (0.05s)
+[23:27:39]   gate ok   udm Ready (0.04s)
+[23:27:39]   gate ok   udr Ready (0.03s)
+[23:27:39]   gate ok   pcf Ready (0.04s)
+[23:27:39]   gate ok   nssf Ready (0.04s)
+[23:27:39]   gate ok   smf Ready (0.04s)
+[23:27:39]   gate ok   chf Ready (0.04s)
+[23:27:39]   gate ok   webui Ready (0.04s)
+[23:27:42]   gate ok   traces reach storage (3.03s)
+[23:27:42] stage 5: 150 subscribers
+[23:27:44]   gate ok   webui port-forward (1.19s)
+[23:27:45]   gate ok   150 subscribers provisioned
+[23:27:45] stage 6: 3 gNBs
+[23:27:46]   gate ok   gnb-0 NG Setup (1.12s)
+[23:27:46]   gate ok   gnb-1 NG Setup (0.04s)
+[23:27:46]   gate ok   gnb-2 NG Setup (0.05s)
+[23:27:46] stage 7: 150 UEs
+[23:28:25]   gate ok   150 UEs registered + PDU sessions with TUN (22.57s)
+[23:28:25]   gate ok   no pod restarts during bring-up (0.06s)
+[23:28:25] READY  run=m2-d-tls-untrusted-udm-1  dir=../runs/m2-d-tls-untrusted-udm-1  (TUN repairs: 1)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-tls-untrusted-udm-1/workload
+[23:29:25] fault D-tls-untrusted-udm: injected (1 step(s))
+[23:30:26] fault D-tls-untrusted-udm: removed after 60s
+[23:30:27] fault D-tls-untrusted-udm: target Ready again after 1.2s
+pings: 4272  loss: 0.05%  rtt p50: 0.52 ms   (+72 first-after-wake probes, 32 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=42   ok=41   aborted=0  t3580=0  p50=550 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=790 ms
+initial_registration                 n=18   ok=13   aborted=0  t3580=0  p50=304 ms
+pdu_session_establishment            n=29   ok=18   aborted=1  t3580=6  p50=827 ms
+pdu_session_establishment_initial    n=13   ok=11   aborted=0  t3580=0  p50=457 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=203 ms
+service_request_mo                   n=17   ok=17   aborted=0  t3580=0  p50=220 ms
+service_request_mt_paging            n=19   ok=19   aborted=0  t3580=0  p50=117 ms
+[23:31:26] labels: D-tls-untrusted-udm injected=yes recovered=1.2s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           41    41      550ms      4ms      7ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    18      790ms     18ms    140ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 13    13      304ms     29ms  14035ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            18    18      827ms    117ms  16953ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    11    11      457ms    308ms    317ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      203ms     17ms    178ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   17    17      220ms     23ms    166ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            19    18      117ms      3ms     23ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 6/18 (driver heuristic: 6), AMF duplicate-PSI drops 5, release-end->request gap p50 340 ms
+[23:31:31] deleting testbed namespaces
+[23:32:08] run m2-d-tls-untrusted-udm-1: done

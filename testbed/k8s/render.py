@@ -59,17 +59,22 @@ def nf(name, tracing):
     args = "-u ./config/uerouting.yaml" if name == "smf" else ""
     extra = "cp /cfg/uerouting.yaml ./config/ && " if name == "smf" else ""
     # POD_IP is only known at start-up; the NRF needs a writable cert dir (it re-issues nrf.pem)
-    cmd = (f"cp /pki/* ./cert/ && sed \"s/POD_IP/$POD_IP/g\" /cfg/{name}cfg.yaml > ./config/{name}cfg.yaml && "
+    # /pki-override: an optional per-NF secret that replaces this NF's key/cert (level-D
+    # certificate faults, testbed/faults.py); absent in normal runs
+    cmd = (f"cp /pki/* ./cert/ && {{ cp /pki-override/* ./cert/ 2>/dev/null || true; }} && "
+           f"sed \"s/POD_IP/$POD_IP/g\" /cfg/{name}cfg.yaml > ./config/{name}cfg.yaml && "
            f"{extra}exec ./{name} -c ./config/{name}cfg.yaml {args}")
     env = sbi_env(name, tracing)
     # probe the plain-http metrics endpoint (same process): a TCP probe on the TLS SBI port makes
     # every NF log "TLS handshake error ... EOF" at ERRO level every period
     probe = {"httpGet": {"path": "/metrics", "port": PORTS["metrics"]}, "periodSeconds": 5, "failureThreshold": 3}
-    spec = {"nodeSelector": {"role": "core"}, "volumes": SCRATCH,
+    override = {"name": "pki-override", "secret": {"secretName": f"f5g-pki-override-{name}", "optional": True}}
+    spec = {"nodeSelector": {"role": "core"}, "volumes": SCRATCH + [override],
             "annotations": {"f5g/scrape": "true", "f5g/metrics-port": str(PORTS["metrics"])},
             "containers": [{"name": name, "image": f"free5gc/{name}:otel2", "imagePullPolicy": "Never",
                             "workingDir": "/free5gc", "command": ["sh", "-c", cmd], "env": env,
-                            "volumeMounts": SCRATCH_MOUNTS,
+                            "volumeMounts": SCRATCH_MOUNTS + [{"name": "pki-override", "mountPath": "/pki-override",
+                                                               "readOnly": True}],
                             "readinessProbe": probe, "livenessProbe": {**probe, "initialDelaySeconds": 10}}]}
     ports = [("sbi", PORTS["sbi"], "TCP"), ("metrics", PORTS["metrics"], "TCP")]
     if name == "amf":

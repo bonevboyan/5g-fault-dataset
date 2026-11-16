@@ -1,0 +1,79 @@
+{
+  "schema": "f5g-labels/1",
+  "run_id": "m2-d-db-auth-corrupt-1",
+  "workload": {
+    "start_ns": 1794780531943921025,
+    "end_ns": 1794780712442421603
+  },
+  "fault": {
+    "id": "D-db-auth-corrupt",
+    "level": "D",
+    "class": "db_tamper",
+    "title": "Corrupted subscriber keys in the UDR",
+    "magnitude": {
+      "subscribers": "all",
+      "field": "encPermanentKey"
+    },
+    "schedule": {
+      "onset_s": 60,
+      "duration_s": 60,
+      "observe_s": 30
+    },
+    "expected": {
+      "first_affected": "ausf",
+      "procedures": [
+        "initial_registration"
+      ]
+    },
+    "target": {
+      "nf": "db",
+      "pods": [
+        {
+          "name": "db-54b97558ff-srtd9",
+          "uid": "701f1f80-9707-44ae-a091-a0f62624caa2",
+          "node": "k3d-f5g-agent-0"
+        }
+      ],
+      "pods_after": [
+        {
+          "name": "db-54b97558ff-srtd9",
+          "uid": "701f1f80-9707-44ae-a091-a0f62624caa2",
+          "node": "k3d-f5g-agent-0"
+        }
+      ]
+    },
+    "injected_ns": 1794780592145386888,
+    "removed_ns": 1794780652318598207,
+    "recovered_ns": 1794780652360363620,
+    "injector": {
+      "kind": "steps",
+      "steps": {
+        "apply": [
+          {
+            "mongo": "var c = db.subscriptionData.authenticationData.authenticationSubscription;\ndb.f5g_fault_backup.drop();\ndb.f5g_fault_backup.insertMany(c.find({}, {encPermanentKey: 1}).toArray());\nprintjson(c.updateMany({}, {$set: {encPermanentKey: \"00000000000000000000000000000000\"}}));\n"
+          }
+        ],
+        "revert": [
+          {
+            "mongo": "var c = db.subscriptionData.authenticationData.authenticationSubscription, n = 0;\ndb.f5g_fault_backup.find().forEach(d => { c.updateOne({_id: d._id}, {$set: {encPermanentKey: d.encPermanentKey}}); n++; });\ndb.f5g_fault_backup.drop();\nprint(\"restored \" + n);\n"
+          }
+        ]
+      },
+      "log": [
+        {
+          "phase": "apply",
+          "action": "mongo",
+          "ts_ns": 1794780592145381911,
+          "output": "{ \"acknowledged\" : true, \"matchedCount\" : 150, \"modifiedCount\" : 150 }"
+        },
+        {
+          "phase": "revert",
+          "action": "mongo",
+          "ts_ns": 1794780652318589282,
+          "output": "restored 150"
+        }
+      ],
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,33 @@
+id: D-nrf-drop-udm
+level: D
+class: nrf_poison
+title: UDM missing from the NRF registry
+description: >-
+  The UDM's registration is deleted from the NRF for 60 s. The UDM keeps running, but the AUSF,
+  AMF and SMF cannot discover it, so authentication and subscriber-data lookups fail and new
+  registrations are rejected. free5GC NFs do not notice that they were removed, so the UDM never
+  re-registers by itself: only the revert brings it back.
+target:
+  nf: nrf
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  subject: udm
+expected:
+  first_affected: ausf
+  procedures: [initial_registration, pdu_session_establishment]
+inject:
+  steps:
+    apply:
+    - mongo: |
+        db.f5g_fault_backup.drop();
+        db.f5g_fault_backup.insertMany(db.NfProfile.find({nfType: "UDM"}).toArray());
+        printjson(db.NfProfile.deleteMany({nfType: "UDM"}));
+    revert:
+    - mongo: |
+        var n = 0;
+        db.f5g_fault_backup.find().forEach(d => { db.NfProfile.replaceOne({_id: d._id}, d, {upsert: true}); n++; });
+        db.f5g_fault_backup.drop();
+        print("restored " + n);

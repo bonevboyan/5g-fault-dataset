@@ -1,0 +1,35 @@
+id: D-db-sm-data-missing
+level: D
+class: db_tamper
+title: Session subscription data deleted for one slice
+description: >-
+  The session-management subscription data of slice 2 (SST 1, SD 112233) is deleted for every
+  subscriber for 60 s. Registration still works, but every new data session on that slice is
+  rejected: the SMF asks the UDM, the UDM gets nothing from the UDR, and the SMF rejects the
+  session (5GSM cause 50). Sessions on slice 1 are not affected.
+target:
+  nf: db
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 30
+magnitude:
+  slice: {sst: 1, sd: "112233"}
+  subscribers: all
+expected:
+  first_affected: smf
+  procedures: [pdu_session_establishment]
+inject:
+  steps:
+    apply:
+    - mongo: |
+        var c = db.subscriptionData.provisionedData.smData;
+        db.f5g_fault_backup.drop();
+        db.f5g_fault_backup.insertMany(c.find({"singleNssai.sd": "112233"}).toArray());
+        printjson(c.deleteMany({"singleNssai.sd": "112233"}));
+    revert:
+    - mongo: |
+        var c = db.subscriptionData.provisionedData.smData, n = 0;
+        db.f5g_fault_backup.find().forEach(d => { c.replaceOne({_id: d._id}, d, {upsert: true}); n++; });
+        db.f5g_fault_backup.drop();
+        print("restored " + n);

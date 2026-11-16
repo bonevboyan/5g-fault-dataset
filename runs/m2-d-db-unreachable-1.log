@@ -1,0 +1,65 @@
+[22:57:59] run m2-d-db-unreachable-1: clean rebuild, 3 gNBs x 50 UEs, tracing=on
+[22:57:59]   gate ok   gtp5g loaded (0.0s)
+[22:57:59]   gate ok   storage tier reachable (0.02s)
+[22:57:59]   gate ok   cluster roles Ready (0.04s)
+[22:58:00] stage 0: telemetry (collectors) + namespace, PKI secret, NF configs
+[22:58:02]   gate ok   otel-gateway Ready (2.08s)
+[22:58:09]   gate ok   logs + metrics reach storage (6.03s)
+[22:58:09] stage 1: mongo
+[22:58:13]   gate ok   mongo Ready (4.16s)
+[22:58:13] stage 2: NRF
+[22:58:14]   gate ok   nrf SBI up (https) (1.11s)
+[22:58:14] stage 3: UPF
+[22:58:20]   gate ok   upf started (6.38s)
+[22:58:20] stage 4: control-plane NFs + webconsole (AF)
+[22:58:24]   gate ok   all NF types registered in NRF (2.26s)
+[22:58:24]   gate ok   smf<->upf PFCP association (0.04s)
+[22:58:24]   gate ok   amf Ready (0.04s)
+[22:58:24]   gate ok   ausf Ready (0.05s)
+[22:58:24]   gate ok   udm Ready (0.04s)
+[22:58:24]   gate ok   udr Ready (0.03s)
+[22:58:24]   gate ok   pcf Ready (0.03s)
+[22:58:24]   gate ok   nssf Ready (0.04s)
+[22:58:24]   gate ok   smf Ready (0.03s)
+[22:58:24]   gate ok   chf Ready (0.03s)
+[22:58:24]   gate ok   webui Ready (0.04s)
+[22:58:33]   gate ok   traces reach storage (9.06s)
+[22:58:33] stage 5: 150 subscribers
+[22:58:34]   gate ok   webui port-forward (1.2s)
+[22:58:36]   gate ok   150 subscribers provisioned
+[22:58:36] stage 6: 3 gNBs
+[22:58:37]   gate ok   gnb-0 NG Setup (1.1s)
+[22:58:37]   gate ok   gnb-1 NG Setup (0.04s)
+[22:58:37]   gate ok   gnb-2 NG Setup (0.05s)
+[22:58:37] stage 7: 150 UEs
+[22:59:13]   gate ok   150 UEs registered + PDU sessions with TUN (19.77s)
+[22:59:13]   gate ok   no pod restarts during bring-up (0.06s)
+[22:59:13] READY  run=m2-d-db-unreachable-1  dir=../runs/m2-d-db-unreachable-1  (TUN repairs: 2)
+[22:59:13]   gate ok   chaos-mesh Ready (tb chaos-up) (0.04s)
+workload: 150 UEs, 180.0s -> /home/boyan-bonev/code/uni/5g/5g-fault-dataset/testbed/../runs/m2-d-db-unreachable-1/workload
+[23:00:13] fault D-db-unreachable: injected (NetworkChaos d-db-unreachable-m2-d-db-unreachable-1)
+[23:01:14] fault D-db-unreachable: removed after 60s
+[23:01:14] fault D-db-unreachable: target Ready again after 0.0s
+pings: 4084  loss: 0.71%  rtt p50: 0.43 ms   (+61 first-after-wake probes, 30 lost: UP re-activation)
+skipped slots (victim busy): idle_cycle=1, pdu_session_churn=1
+an_release                           n=43   ok=39   aborted=0  t3580=0  p50=543 ms
+deregistration_switch_off            n=18   ok=18   aborted=0  t3580=0  p50=783 ms
+initial_registration                 n=18   ok=13   aborted=0  t3580=0  p50=280 ms
+pdu_session_establishment            n=29   ok=20   aborted=1  t3580=4  p50=874 ms
+pdu_session_establishment_initial    n=13   ok=13   aborted=0  t3580=0  p50=465 ms
+pdu_session_release                  n=29   ok=29   aborted=0  t3580=0  p50=216 ms
+service_request_mo                   n=15   ok=15   aborted=0  t3580=0  p50=207 ms
+service_request_mt_paging            n=19   ok=19   aborted=0  t3580=0  p50=112 ms
+[23:02:13] labels: D-db-unreachable injected=yes recovered=0.0s
+procedure                             n timed   poll p50  log p50  log p90  events
+an_release                           39    39      543ms      4ms     10ms  amf_an_rel_req->ue_cm_idle
+deregistration_switch_off            18    13      783ms     17ms    207ms  ue_dereg_initiated->amf_ue_removed
+initial_registration                 13    13      280ms     24ms    218ms  ue_reg_initiated->ue_reg_ok
+pdu_session_establishment            20    20      874ms     39ms  16541ms  ue_pdu_req->ue_pdu_ok
+pdu_session_establishment_initial    13    13      465ms    313ms    315ms  ue_reg_ok->ue_pdu_ok(all)
+pdu_session_release                  29    29      216ms     19ms  16579ms  ue_pdu_rel_req->ue_pdu_rel_done
+service_request_mo                   15    11      207ms      4ms     23ms  ue_sr_initiated->ue_sr_ok
+service_request_mt_paging            19    15      112ms      5ms     26ms  amf_paging->ue_sr_ok
+pdu re-establishment: T3580 retries 4/20 (driver heuristic: 4), AMF duplicate-PSI drops 4, release-end->request gap p50 634 ms
+[23:02:18] deleting testbed namespaces
+[23:02:55] run m2-d-db-unreachable-1: done

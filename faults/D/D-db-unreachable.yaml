@@ -1,0 +1,30 @@
+id: D-db-unreachable
+level: D
+class: db_unreachable
+title: MongoDB unreachable
+description: >-
+  Every reply from the MongoDB pod is dropped for 60 s. The UDR (subscriber data), the PCF (policy
+  data) and the NRF (its registry is stored in the same database) all hang on their queries, so
+  registrations, data sessions and NF discovery fail although every NF pod looks healthy.
+target:
+  nf: db
+schedule:
+  onset_s: 60
+  duration_s: 60
+  observe_s: 60
+magnitude:
+  loss_pct: 100
+  direction: egress
+expected:
+  first_affected: udr
+  procedures: [initial_registration, pdu_session_establishment]
+inject:
+  chaos:
+    kind: NetworkChaos
+    spec:
+      action: loss
+      mode: all
+      loss:
+        loss: "100"
+        correlation: "0"
+      direction: to

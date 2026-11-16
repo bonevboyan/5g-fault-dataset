@@ -49,6 +49,7 @@ def main():
     bins = list(range((lo - t0) // B, (hi - t0 - 1) // B + 1))   # only bins that start inside the workload
     b_of = lambda ns: (ns - t0) // B  # noqa: E731
     nf = f["target"]["nf"]
+    ctr = {"db": "mongo"}.get(nf, nf)    # container name, where it differs from the app label
     rows = {}
 
     logs = loki_lines(a.store, f'{{run_id="{run}", service_name!~"k8s-events|ueransim|otelcol|node-exporter"}} |~ "\\\\[(ERRO|WARN)\\\\]"', lo, hi)
@@ -57,7 +58,7 @@ def main():
     rows[f"k8s: events on {nf}"] = Counter(b_of(ts) for ts, _ in ev)
 
     res = get(f"http://{a.store}:9090/api/v1/query_range",
-              {"query": f'sum(rate(container_cpu_usage_seconds_total{{run_id="{run}",container="{nf}"}}[1m]))',
+              {"query": f'sum(rate(container_cpu_usage_seconds_total{{run_id="{run}",container="{ctr}"}}[1m]))',
                "start": lo / 1e9, "end": hi / 1e9, "step": a.bin})
     cpu = {}
     for s in res["data"]["result"]:
@@ -66,7 +67,7 @@ def main():
     rows[f"metrics: {nf} CPU (cores)"] = cpu
     # memory per pod, newest pod wins: a restarted NF starts with empty state, so this drops
     res = get(f"http://{a.store}:9090/api/v1/query_range",
-              {"query": f'max by (pod) (container_memory_working_set_bytes{{run_id="{run}",container="{nf}"}})',
+              {"query": f'max by (pod) (container_memory_working_set_bytes{{run_id="{run}",container="{ctr}"}})',
                "start": lo / 1e9, "end": hi / 1e9, "step": a.bin})
     mem = {}
     for s in sorted(res["data"]["result"], key=lambda s: s["values"][0][0]):
